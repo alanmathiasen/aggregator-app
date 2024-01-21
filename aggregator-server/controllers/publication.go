@@ -18,6 +18,7 @@ func GetAllPublications(w http.ResponseWriter, r *http.Request) {
 		helpers.MessageLogs.ErrorLog.Println(err)
 		return
 	}
+	
 	helpers.WriteJSON(w, http.StatusOK, helpers.Envelope{"publications": all})
 }
 
@@ -47,9 +48,30 @@ func CreatePublication(w http.ResponseWriter, r *http.Request) {
 		helpers.MessageLogs.ErrorLog.Println(err)
 		return
 	}
+
 	helpers.WriteJSON(w, http.StatusCreated, publicationCreated)
 }
 
+//PUT /publications/:id
+func UpdatePublication(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	var publicationData services.Publication
+	err := json.NewDecoder(r.Body).Decode(&publicationData)
+	if err != nil {
+		helpers.MessageLogs.ErrorLog.Println(err)
+		return
+	}
+
+	publicationUpdated, err := publication.UpdatePublication(id, publicationData)
+	if err != nil {
+		helpers.MessageLogs.ErrorLog.Println(err)
+		return
+	}
+
+	helpers.WriteJSON(w, http.StatusOK, publicationUpdated)
+}
+
+//DELETE /publications/:id
 func DeletePublication(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	err := publication.DeletePublication(id)
@@ -58,5 +80,5 @@ func DeletePublication(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	helpers.WriteJSON(w, http.StatusNoContent, "")
+	helpers.WriteJSON(w, http.StatusOK, helpers.Envelope{"message": "succesfully deleted"})
 }

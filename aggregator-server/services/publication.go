@@ -103,6 +103,38 @@ func (p *Publication) CreatePublication(publication Publication) (*Publication, 
 	return &publication, nil
 }
 
+func (p *Publication) UpdatePublication(id string, update Publication) (*Publication, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
+	defer cancel()
+
+	query := `
+		UPDATE publications
+		SET
+			title = $1,
+			description = $2,
+			rating = $3,
+			image = $4,
+			updated_at = $5
+		WHERE id = $6
+		RETURNING id, created_at, updated_at
+	`
+	err := db.QueryRowContext(
+		ctx,
+		query,
+		update.Title,
+		update.Description,
+		update.Rating,
+		update.Image,
+		time.Now(),
+		id,
+	).Scan(&update.ID, &update.CreatedAt, &update.UpdatedAt)
+	if err != nil {
+		return nil, err
+	}
+
+	return &update, nil
+}
+
 func (p *Publication) DeletePublication(id string)  error {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
