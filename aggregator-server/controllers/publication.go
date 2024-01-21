@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/alanmathiasen/aggregator-api/helpers"
@@ -20,6 +19,18 @@ func GetAllPublications(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	helpers.WriteJSON(w, http.StatusOK, helpers.Envelope{"publications": all})
+}
+
+//GET /publications/:id
+func GetPublicationById(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	publication, err := publication.GetPublicationById(id)
+	if err != nil {
+		helpers.MessageLogs.ErrorLog.Println(err)
+		return
+	}
+
+	helpers.WriteJSON(w, http.StatusOK, publication)
 }
 
 //POST /publications
@@ -41,7 +52,6 @@ func CreatePublication(w http.ResponseWriter, r *http.Request) {
 
 func DeletePublication(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-	fmt.Println("id", id)
 	err := publication.DeletePublication(id)
 	if err != nil {
 		helpers.MessageLogs.ErrorLog.Println(err)

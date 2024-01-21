@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"fmt"
 	"time"
 )
 
@@ -49,6 +48,35 @@ func (p *Publication) GetAllPublications() ([]*Publication, error) {
 	return publications, nil
 }
 
+func (p *Publication) GetPublicationById(id string) (*Publication, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
+	defer cancel()
+
+	query := `
+		SELECT id, title, description, rating, image, created_at, updated_at 
+		FROM publications 
+		WHERE id = $1
+	`
+	publication := &Publication{}
+	
+	row := db.QueryRowContext(ctx, query, id)
+
+	err := row.Scan(
+		&publication.ID,
+		&publication.Title,
+		&publication.Description,
+		&publication.Rating,
+		&publication.Image,
+		&publication.CreatedAt,
+		&publication.UpdatedAt,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return publication, nil
+}
+
 func (p *Publication) CreatePublication(publication Publication) (*Publication, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
@@ -79,8 +107,8 @@ func (p *Publication) DeletePublication(id string)  error {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
-	query := fmt.Sprintf("DELETE FROM publications WHERE id = '%s'", id)
-	_, err := db.ExecContext(ctx, query)
+	query := `DELETE FROM publications WHERE id = $1`
+	_, err := db.ExecContext(ctx, query, id)
 	if err != nil {
 		return err
 	}
