@@ -3,6 +3,9 @@ package services
 import (
 	"context"
 	"time"
+
+	validation "github.com/go-ozzo/ozzo-validation/v4"
+	"github.com/go-ozzo/ozzo-validation/v4/is"
 )
 
 type Publication struct {
@@ -13,6 +16,15 @@ type Publication struct {
 	Image string `json:"image"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
+}
+
+func (p *Publication) Validate() error {
+	return validation.ValidateStruct(p,
+		validation.Field(&p.Title, validation.Required, validation.Length(3, 20)),
+		validation.Field(&p.Description, validation.Required, validation.Length(3, 100)),
+		validation.Field(&p.Rating, validation.Min(0.0), validation.Max(5.0)),
+		validation.Field(&p.Image, validation.Required, is.URL),
+	)
 }
 
 func (p *Publication) GetAllPublications() ([]*Publication, error) {
@@ -106,6 +118,8 @@ func (p *Publication) CreatePublication(publication Publication) (*Publication, 
 func (p *Publication) UpdatePublication(id string, update Publication) (*Publication, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
+
+
 
 	query := `
 		UPDATE publications

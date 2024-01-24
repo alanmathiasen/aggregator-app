@@ -21,7 +21,7 @@ start_container:
 	docker start ${DB_DOCKER_CONTAINER}
 
 create_migrations:
-	${MIGRATE} create -ext sql -dir migrations/ -seq init_schema
+	${MIGRATE} create -ext sql -dir migrations/ -seq add_chapters
 
 migrate_up:
 	${MIGRATE} up

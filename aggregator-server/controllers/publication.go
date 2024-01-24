@@ -43,6 +43,13 @@ func CreatePublication(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	err = publicationData.Validate()
+	if err != nil {
+		helpers.MessageLogs.ErrorLog.Println(err)
+		helpers.ErrorJSON(w, err, http.StatusBadRequest)
+		return
+	}
+
 	publicationCreated, err := publication.CreatePublication(publicationData) 
 	if err != nil {
 		helpers.MessageLogs.ErrorLog.Println(err)
