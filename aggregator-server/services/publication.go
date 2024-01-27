@@ -20,8 +20,8 @@ type Publication struct {
 
 func (p *Publication) Validate() error {
 	return validation.ValidateStruct(p,
-		validation.Field(&p.Title, validation.Required, validation.Length(3, 20)),
-		validation.Field(&p.Description, validation.Required, validation.Length(3, 100)),
+		validation.Field(&p.Title, validation.Required, validation.Length(3, 50)),
+		validation.Field(&p.Description, validation.Required, validation.Length(3, 300)),
 		validation.Field(&p.Rating, validation.Min(0.0), validation.Max(5.0)),
 		validation.Field(&p.Image, validation.Required, is.URL),
 	)

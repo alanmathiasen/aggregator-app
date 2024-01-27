@@ -1,0 +1,52 @@
+<!-- <!DOCTYPE html>
+<html>
+  <head>
+    <title>Publications</title>
+    <script src="https://unpkg.com/htmx.org"></script>
+  </head>
+  <body>
+    <h1>Publications</h1>
+    <div id="publications">
+      {{range .publications}}
+      <div class="publication">
+        <h2>{{.Title}}</h2>
+        <button hx-toggle="#details-{{.ID}}" hx-swap="outerHTML">
+          Toggle Details
+        </button>
+        <div id="details-{{.ID}}" style="display: none">
+          < The details will be loaded here 
+        </div>
+      </div>
+      {{end}}
+    </div>
+  </body>
+</html> -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Publications</title>
+    <script src="https://unpkg.com/htmx.org"></script>
+    <style>
+      .details {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Publications</h1>
+    <div id="publications">
+      {{range .publications}}
+      <div class="publication">
+        <h2>{{.Title}}</h2>
+        <button hx-get="/div" hx-swap="swap:outerHTML" hx-target="#insert">
+          Toggle Details
+        </button>
+        <div id="details-{{.ID}}" class="details">
+          <p>{{.Description}}</p>
+        </div>
+      </div>
+      {{end}}
+    </div>
+    <div id="insert"></div>
+  </body>
+</html>

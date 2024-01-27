@@ -3,6 +3,7 @@ package controllers
 import (
 	"encoding/json"
 	"net/http"
+	"text/template"
 
 	"github.com/alanmathiasen/aggregator-api/helpers"
 	"github.com/alanmathiasen/aggregator-api/services"
@@ -88,4 +89,38 @@ func DeletePublication(w http.ResponseWriter, r *http.Request) {
 	}
 
 	helpers.WriteJSON(w, http.StatusOK, helpers.Envelope{"message": "succesfully deleted"})
+}
+
+func GetAllPublicationsHTML(w http.ResponseWriter, r *http.Request) {
+	all, err := publication.GetAllPublications()
+	if err != nil {
+		helpers.MessageLogs.ErrorLog.Println(err)
+		return
+	}
+	
+	tmpl, err := template.ParseFiles("templates/publications.html")
+	if err != nil {
+		helpers.MessageLogs.ErrorLog.Println(err)
+		return
+	}
+	
+	err = tmpl.Execute(w, helpers.Envelope{"publications": all})
+	if err != nil {
+		helpers.MessageLogs.ErrorLog.Println(err)
+		return
+	}
+}
+
+func GetDiv(w http.ResponseWriter, r *http.Request) {	
+	tmpl, err := template.ParseFiles("templates/test.html")
+	if err != nil {
+		helpers.MessageLogs.ErrorLog.Println(err)
+		return
+	}
+	
+	err = tmpl.Execute(w, nil)
+	if err != nil {
+		helpers.MessageLogs.ErrorLog.Println(err)
+		return
+	}
 }

@@ -30,6 +30,7 @@ migrate_down:
 	${MIGRATE} down
 
 build:
+	@templ generate
 	if [ -f "${BINARY}" ]; then \
 		rm ${BINARY}; \
 		echo "Deleted ${BINARY}"; \
@@ -38,6 +39,7 @@ build:
 	go build -o ${BINARY} cmd/server/*.go
 
 run: build
+	
 	./${BINARY}	
 # @echo "api started..."
 

@@ -26,5 +26,8 @@ func Routes() http.Handler {
 	router.Post("/api/v1/publications", controllers.CreatePublication)
 	router.Put("/api/v1/publications/{id}", controllers.UpdatePublication)
 	router.Delete("/api/v1/publications/{id}", controllers.DeletePublication)
+
+	router.Get("/", controllers.GetAllPublicationsHTML)
+	router.Get("/div", controllers.GetDiv)
 	return router
 }
