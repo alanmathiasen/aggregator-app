@@ -1,5 +1,38 @@
 package dashboard
 
-templ Show() {
-  <h1>hola</h1>
+import 	"github.com/alanmathiasen/aggregator-api/services"
+
+templ Hello(hello string) {
+  <h1>{hello}</h1>
+}
+
+templ Greeting(publications []*services.Publication) {
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <title>Publications</title>
+      <script src="https://unpkg.com/htmx.org"></script>
+      <style>
+        .details {
+          display: none;
+        }
+      </style>
+    </head>
+    <body>
+      <h1>Publications</h1>
+      <div>
+        for _, p := range publications {
+          @Publication(*p)
+        }
+      </div>
+      <div id="insert"></div>
+    </body>
+  </html>
+}
+
+templ Publication (publication services.Publication) {
+  <div>
+    {publication.Title}
+    {publication.Description}
+  </div>
 }

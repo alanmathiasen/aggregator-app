@@ -7,6 +7,7 @@ import (
 
 	"github.com/alanmathiasen/aggregator-api/helpers"
 	"github.com/alanmathiasen/aggregator-api/services"
+	"github.com/alanmathiasen/aggregator-api/view/dashboard"
 	"github.com/go-chi/chi"
 )
 
@@ -97,18 +98,25 @@ func GetAllPublicationsHTML(w http.ResponseWriter, r *http.Request) {
 		helpers.MessageLogs.ErrorLog.Println(err)
 		return
 	}
-	
-	tmpl, err := template.ParseFiles("templates/publications.html")
-	if err != nil {
-		helpers.MessageLogs.ErrorLog.Println(err)
-		return
-	}
-	
-	err = tmpl.Execute(w, helpers.Envelope{"publications": all})
-	if err != nil {
-		helpers.MessageLogs.ErrorLog.Println(err)
-		return
-	}
+
+    // Generate the templ component
+    component := dashboard.Greeting(all)
+
+    // Render the component with the context and ResponseWriter
+    err = component.Render(r.Context(), w)
+    if err != nil {
+        // handle error
+    }
+	// tmpl, err := template.ParseFiles("templates/publications.html")
+	// if err != nil {
+	// 	helpers.MessageLogs.ErrorLog.Println(err)
+	// 	return
+	// }
+	// err = tmpl.Execute(w, helpers.Envelope{"publications": all})
+	// if err != nil {
+	// 	helpers.MessageLogs.ErrorLog.Println(err)
+	// 	return
+	// }
 }
 
 func GetDiv(w http.ResponseWriter, r *http.Request) {	
