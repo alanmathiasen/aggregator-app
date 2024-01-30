@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"text/template"
 
@@ -12,7 +13,6 @@ import (
 )
 
 var publication services.Publication 
-
 //GET /publications
 func GetAllPublications(w http.ResponseWriter, r *http.Request) {
 	all, err := publication.GetAllPublications()
@@ -99,27 +99,28 @@ func GetAllPublicationsHTML(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-    // Generate the templ component
     component := dashboard.Greeting(all)
 
-    // Render the component with the context and ResponseWriter
     err = component.Render(r.Context(), w)
     if err != nil {
-        // handle error
+				helpers.MessageLogs.ErrorLog.Println(err)
+				return
     }
-	// tmpl, err := template.ParseFiles("templates/publications.html")
-	// if err != nil {
-	// 	helpers.MessageLogs.ErrorLog.Println(err)
-	// 	return
-	// }
-	// err = tmpl.Execute(w, helpers.Envelope{"publications": all})
-	// if err != nil {
-	// 	helpers.MessageLogs.ErrorLog.Println(err)
-	// 	return
-	// }
+
 }
 
 func GetDiv(w http.ResponseWriter, r *http.Request) {	
+	// id := chi.URLParam(r, "id")
+	// p, err := publication.GetPublicationById(id)
+	// if err != nil {
+	// 	helpers.MessageLogs.ErrorLog.Println(err)
+	// 	return
+	// }
+	// pl := services.PublicationLink{
+		
+	// }
+	var links services.PublicationLink
+	fmt.Printf(links.ID)
 	tmpl, err := template.ParseFiles("templates/test.html")
 	if err != nil {
 		helpers.MessageLogs.ErrorLog.Println(err)

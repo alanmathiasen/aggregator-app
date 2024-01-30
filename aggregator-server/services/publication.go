@@ -95,7 +95,8 @@ func (p *Publication) CreatePublication(publication Publication) (*Publication, 
 
 	query := `
 		INSERT INTO publications (title, description, rating, image, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, created_at, updated_at
+		VALUES ($1, $2, $3, $4, $5, $6) 
+		RETURNING id, created_at, updated_at
 		`
 
 	err := db.QueryRowContext(ctx, 
