@@ -92,6 +92,7 @@ func DeletePublication(w http.ResponseWriter, r *http.Request) {
 	helpers.WriteJSON(w, http.StatusOK, helpers.Envelope{"message": "succesfully deleted"})
 }
 
+
 func GetAllPublicationsHTML(w http.ResponseWriter, r *http.Request) {
 	all, err := publication.GetAllPublications()
 	if err != nil {
@@ -99,7 +100,7 @@ func GetAllPublicationsHTML(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-    component := dashboard.Greeting(all)
+    component := dashboard.DashboardPublications(all)
 
     err = component.Render(r.Context(), w)
     if err != nil {
@@ -108,6 +109,22 @@ func GetAllPublicationsHTML(w http.ResponseWriter, r *http.Request) {
     }
 
 }
+
+func GetPublicationHTML(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	p, err := publication.GetPublicationById(id)
+	if err != nil {
+		helpers.MessageLogs.ErrorLog.Println(err)
+		return
+	}
+	component := dashboard.Publication(*p)
+	err = component.Render(r.Context(), w)
+	if err != nil {
+		helpers.MessageLogs.ErrorLog.Println(err)
+		return
+	}
+}
+
 
 func GetDiv(w http.ResponseWriter, r *http.Request) {	
 	// id := chi.URLParam(r, "id")
@@ -119,7 +136,7 @@ func GetDiv(w http.ResponseWriter, r *http.Request) {
 	// pl := services.PublicationLink{
 		
 	// }
-	var links services.PublicationLink
+	var links services.PublicationSource
 	fmt.Printf(links.ID)
 	tmpl, err := template.ParseFiles("templates/test.html")
 	if err != nil {

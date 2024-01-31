@@ -28,6 +28,6 @@ func Routes() http.Handler {
 	router.Delete("/api/v1/publications/{id}", controllers.DeletePublication)
 
 	router.Get("/", controllers.GetAllPublicationsHTML)
-	router.Get("/div", controllers.GetDiv)
+	router.Get("/{id}", controllers.GetPublicationHTML)
 	return router
 }

@@ -6,7 +6,7 @@ templ Hello(hello string) {
   <h1>{hello}</h1>
 }
 
-templ Greeting(publications []*services.Publication) {
+templ DashboardPublications(publications []*services.Publication) {
   <!DOCTYPE html>
   <html>
     <head>
@@ -32,7 +32,14 @@ templ Greeting(publications []*services.Publication) {
 
 templ Publication (publication services.Publication) {
   <div>
+    {publication.ID}
     {publication.Title}
     {publication.Description}
+    <h3>links</h3>
+    <ul>
+      for _, s := range publication.Sources {
+        <li><a href={templ.SafeURL(s.Link)} target="_blank">{s.Source}</a></li>
+      }
+    </ul>
   </div>
 }

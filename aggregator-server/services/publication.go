@@ -8,6 +8,11 @@ import (
 	"github.com/go-ozzo/ozzo-validation/v4/is"
 )
 
+type Source struct {
+	Link string `json:"link"`
+	Source string `json:"source"`
+}
+
 type Publication struct {
 	ID string `json:"id"`
 	Title string `json:"title"`
@@ -16,6 +21,7 @@ type Publication struct {
 	Image string `json:"image"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
+	Sources []*Source `json:"sources"`
 }
 
 func (p *Publication) Validate() error {
@@ -65,27 +71,37 @@ func (p *Publication) GetPublicationById(id string) (*Publication, error) {
 	defer cancel()
 
 	query := `
-		SELECT id, title, description, rating, image, created_at, updated_at 
-		FROM publications 
-		WHERE id = $1
+		SELECT p.id, p.title, p.description, p.rating, p.image, p.created_at, p.updated_at, ps.link, ps.source 
+		FROM publications p
+		LEFT JOIN publication_sources ps ON p.id = ps.publication_id
+		WHERE p.id = $1
 	`
 	publication := &Publication{}
 	
-	row := db.QueryRowContext(ctx, query, id)
+	rows, err := db.QueryContext(ctx, query, id)
 
-	err := row.Scan(
-		&publication.ID,
-		&publication.Title,
-		&publication.Description,
-		&publication.Rating,
-		&publication.Image,
-		&publication.CreatedAt,
-		&publication.UpdatedAt,
-	)
 	if err != nil {
 		return nil, err
 	}
-
+	defer rows.Close()
+	for rows.Next() {
+		var source Source
+		err := rows.Scan(
+			&publication.ID,
+			&publication.Title,
+			&publication.Description,
+			&publication.Rating,
+			&publication.Image,
+			&publication.CreatedAt,
+			&publication.UpdatedAt,
+			&source.Link,
+			&source.Source,
+		)
+		if err != nil {
+			return nil, err
+		}
+		publication.Sources = append(publication.Sources, &source)
+	}
 	return publication, nil
 }
 
