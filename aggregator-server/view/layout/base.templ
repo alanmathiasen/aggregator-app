@@ -1,0 +1,18 @@
+package layout
+
+templ Base() {
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <title>Publications</title>
+      <script src="https://unpkg.com/htmx.org"></script>
+      <link rel="stylesheet" href="/static/css/tailwind.css" />
+    </head>
+    <body>
+      <div class="flex flex-col w-full min-h-screen">
+        @Navbar()
+        {children...}
+      </div>
+    </body>
+  </html>
+}

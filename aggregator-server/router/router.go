@@ -23,12 +23,16 @@ func Routes() http.Handler {
 	
 	fs := http.FileServer(http.Dir("static"))
 	router.Handle("/static/*", http.StripPrefix("/static/", fs))
-
+	//--------------------------REST API--------------------------
+	// Publications
 	router.Get("/api/v1/publications", controllers.GetAllPublications)
 	router.Get("/api/v1/publications/{id}", controllers.GetPublicationById)
 	router.Post("/api/v1/publications", controllers.CreatePublication)
 	router.Put("/api/v1/publications/{id}", controllers.UpdatePublication)
 	router.Delete("/api/v1/publications/{id}", controllers.DeletePublication)
+	//Chapters
+	router.Get("/api/v1/publications/{id}/chapters", controllers.GetAllChaptersByPublicationID)
+	router.Post("/api/v1/publications/{id}/chapters", controllers.CreateChapterForPublication)
 
 	router.Get("/", controllers.GetAllPublicationsHTML)
 	router.Get("/{id}", controllers.GetPublicationHTML)

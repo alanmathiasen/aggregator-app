@@ -1,46 +1,58 @@
 package dashboard
 
-import 	"github.com/alanmathiasen/aggregator-api/services"
+import (
+    "github.com/alanmathiasen/aggregator-api/view/layout"
+    "github.com/alanmathiasen/aggregator-api/services"
+  )
 
 templ Hello(hello string) {
   <h1>{hello}</h1>
 }
 
 templ DashboardPublications(publications []*services.Publication) {
-  <!DOCTYPE html>
-  <html>
-    <head>
-      <title>Publications</title>
-      <script src="https://unpkg.com/htmx.org"></script>
-      <style>
-        .details {
-          display: none;
-        }
-      </style>
-      <link rel="stylesheet" href="/static/css/tailwind.css" />
-    </head>
-    <body>
-      <h1 class="my-2 mx-10">Publicationss</h1>
-      <div>
+  @layout.Base() {
+    <main class="flex min-h-[calc(100vh_-_theme(spacing.16))] bg-gray-100/40 flex-1 flex-col gap-4 p-4 md:gap-8 md:p-10">
+      <div class="max-w-6xl w-full mx-auto flex items-center gap-4">
+        <form class="flex-1">
+          <input
+            class="flex h-10 w-full rounded-md border border-input px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 bg-white"
+            placeholder="Search manga..."
+          />
+          <button
+            class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 sr-only"
+            type="submit"
+          >
+            Submit
+          </button>
+        </form>
+      </div>
+      <div class="flex flex-col gap-6 max-w-6xl w-full mx-auto">
         for _, p := range publications {
           @Publication(*p)
         }
       </div>
-      <div id="insert"></div>
-    </body>
-  </html>
+    </main>
+  }
 }
 
 templ Publication (publication services.Publication) {
-  <div>
-    {publication.ID}
-    {publication.Title}
-    {publication.Description}
-    <h3>links</h3>
-    <ul>
-      for _, s := range publication.Sources {
-        <li><a href={templ.SafeURL(s.Link)} target="_blank">{s.Source}</a></li>
-      }
-    </ul>
+  <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
+    <div class="space-y-1.5 p-6 flex flex-row items-center gap-4">
+      <img
+        src={publication.Image}
+        alt="Manga cover"
+        width="100"
+        height="150"
+        class="object-cover w-16 h-24"
+        style="aspect-ratio:100/150;object-fit:cover"
+      />
+      <div class="grid gap-1 flex-grow">
+        <h3 class="text-2xl font-semibold whitespace-nowrap leading-none tracking-tight">{publication.Title}</h3>
+        <p class="text-sm text-muted-foreground">Latest Chapter: 25</p>
+      </div>
+      <button class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 ml-auto">
+        Mark as Read
+      </button>
+    </div>
   </div>
 }

@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"reflect"
 
 	"github.com/alanmathiasen/aggregator-api/services"
 )
@@ -25,7 +26,7 @@ var MessageLogs = &Message {
 	ErrorLog: errorLog,
 }
 
-func ReadJSON(w http.ResponseWriter, r * http.Request, data interface{}) error {
+func ReadJSON(w http.ResponseWriter, r *http.Request, data interface{}) error {
 	maxBytes := 1048576
 	r.Body = http.MaxBytesReader(w, r.Body, int64(maxBytes))
 	dec := json.NewDecoder(r.Body)
@@ -43,6 +44,10 @@ func ReadJSON(w http.ResponseWriter, r * http.Request, data interface{}) error {
 }
 
 func WriteJSON(w http.ResponseWriter, status int, data interface{}, headers ...http.Header) error {
+	val := reflect.ValueOf(data)
+	if val.Kind() == reflect.Slice && val.IsNil() {
+			data = reflect.MakeSlice(val.Type(), 0, 0).Interface()
+	}
 	out, err := json.MarshalIndent(data, "", "\t")
 	if err != nil {
 		return err
