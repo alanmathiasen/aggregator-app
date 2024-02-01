@@ -30,6 +30,9 @@ migrate_down:
 	${MIGRATE} down
 
 build:
+# generate css from tailwind
+	@npm run build
+# generate go files from templ templates
 	@templ generate
 	if [ -f "${BINARY}" ]; then \
 		rm ${BINARY}; \

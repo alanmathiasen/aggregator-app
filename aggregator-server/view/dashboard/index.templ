@@ -17,9 +17,10 @@ templ DashboardPublications(publications []*services.Publication) {
           display: none;
         }
       </style>
+      <link rel="stylesheet" href="/static/css/tailwind.css" />
     </head>
     <body>
-      <h1>Publications</h1>
+      <h1 class="my-2 mx-10">Publicationss</h1>
       <div>
         for _, p := range publications {
           @Publication(*p)

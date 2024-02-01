@@ -20,6 +20,9 @@ func Routes() http.Handler {
 		AllowCredentials: true,
 		MaxAge: 300,	
 	}))
+	
+	fs := http.FileServer(http.Dir("static"))
+	router.Handle("/static/*", http.StripPrefix("/static/", fs))
 
 	router.Get("/api/v1/publications", controllers.GetAllPublications)
 	router.Get("/api/v1/publications/{id}", controllers.GetPublicationById)

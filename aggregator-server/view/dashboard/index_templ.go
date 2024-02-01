@@ -62,7 +62,7 @@ func DashboardPublications(publications []*services.Publication) templ.Component
 			templ_7745c5c3_Var3 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<!doctype html><html><head><title>Publications</title><script src=\"https://unpkg.com/htmx.org\"></script><style>\n        .details {\n          display: none;\n        }\n      </style></head><body><h1>Publications</h1><div>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<!doctype html><html><head><title>Publications</title><script src=\"https://unpkg.com/htmx.org\"></script><style>\n        .details {\n          display: none;\n        }\n      </style><link rel=\"stylesheet\" href=\"/static/css/tailwind.css\"></head><body><h1 class=\"my-2 mx-10\">Publicationss</h1><div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -103,7 +103,7 @@ func Publication(publication services.Publication) templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(publication.ID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/dashboard/index.templ`, Line: 34, Col: 19}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/dashboard/index.templ`, Line: 35, Col: 19}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -116,7 +116,7 @@ func Publication(publication services.Publication) templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(publication.Title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/dashboard/index.templ`, Line: 35, Col: 22}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/dashboard/index.templ`, Line: 36, Col: 22}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -129,7 +129,7 @@ func Publication(publication services.Publication) templ.Component {
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(publication.Description)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/dashboard/index.templ`, Line: 36, Col: 28}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/dashboard/index.templ`, Line: 37, Col: 28}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
@@ -156,7 +156,7 @@ func Publication(publication services.Publication) templ.Component {
 			var templ_7745c5c3_Var9 string
 			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(s.Source)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/dashboard/index.templ`, Line: 40, Col: 69}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/dashboard/index.templ`, Line: 41, Col: 69}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 			if templ_7745c5c3_Err != nil {
