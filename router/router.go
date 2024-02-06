@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/alanmathiasen/aggregator-api/controllers"
+	"github.com/alanmathiasen/aggregator-api/middlewares"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/cors"
@@ -20,6 +21,13 @@ func Routes() http.Handler {
 		AllowCredentials: true,
 		MaxAge: 300,	
 	}))
+
+	
+  router.Group(func(r chi.Router) {
+		r.Use(middlewares.AuthMiddleware)
+		r.Get("/", controllers.GetAllPublicationsHTML)
+
+	})
 	
 	fs := http.FileServer(http.Dir("static"))
 	router.Handle("/static/*", http.StripPrefix("/static/", fs))
@@ -34,7 +42,8 @@ func Routes() http.Handler {
 	router.Get("/api/v1/publications/{id}/chapters", controllers.GetAllChaptersByPublicationID)
 	router.Post("/api/v1/publications/{id}/chapters", controllers.CreateChapterForPublication)
 
-	router.Get("/", controllers.GetAllPublicationsHTML)
+	router.Get("/auth/login", controllers.LoginHTML)
+
 	router.Get("/{id}", controllers.GetPublicationHTML)
 	return router
 }

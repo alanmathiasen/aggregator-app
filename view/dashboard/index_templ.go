@@ -114,7 +114,7 @@ func Publication(publication services.Publication) templ.Component {
 			templ_7745c5c3_Var5 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"rounded-lg border bg-card text-card-foreground shadow-sm\" data-v0-t=\"card\"><div class=\"space-y-1.5 p-6 flex flex-row items-center gap-4\"><img src=\"")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"rounded-lg border bg-card text-card-foreground shadow-sm\"><div class=\"space-y-1.5 p-6 flex flex-row items-center gap-4\"><img src=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

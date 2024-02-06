@@ -2,12 +2,11 @@ package controllers
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
-	"text/template"
 
 	"github.com/alanmathiasen/aggregator-api/helpers"
 	"github.com/alanmathiasen/aggregator-api/services"
+	login "github.com/alanmathiasen/aggregator-api/view/auth"
 	"github.com/alanmathiasen/aggregator-api/view/dashboard"
 	"github.com/go-chi/chi"
 )
@@ -125,26 +124,9 @@ func GetPublicationHTML(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func LoginHTML(w http.ResponseWriter, r *http.Request) {
 
-func GetDiv(w http.ResponseWriter, r *http.Request) {	
-	// id := chi.URLParam(r, "id")
-	// p, err := publication.GetPublicationById(id)
-	// if err != nil {
-	// 	helpers.MessageLogs.ErrorLog.Println(err)
-	// 	return
-	// }
-	// pl := services.PublicationLink{
-		
-	// }
-	var links services.PublicationSource
-	fmt.Printf(links.ID)
-	tmpl, err := template.ParseFiles("templates/test.html")
-	if err != nil {
-		helpers.MessageLogs.ErrorLog.Println(err)
-		return
-	}
-	
-	err = tmpl.Execute(w, nil)
+	err := login.Login().Render(r.Context(), w)
 	if err != nil {
 		helpers.MessageLogs.ErrorLog.Println(err)
 		return
