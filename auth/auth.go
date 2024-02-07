@@ -7,9 +7,10 @@ import (
 	"github.com/gorilla/sessions"
 )
 
-var Store = sessions.NewCookieStore([]byte("super_duper_secret"))
+var Store *sessions.CookieStore
 
 func InitStore () {
+	Store = sessions.NewCookieStore([]byte("super_duper_secret"))
 	Store.Options.HttpOnly = true
 	// store.Options.Secure = true
 	gob.Register(&services.User{})

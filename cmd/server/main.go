@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/alanmathiasen/aggregator-api/auth"
 	"github.com/alanmathiasen/aggregator-api/db"
 	"github.com/alanmathiasen/aggregator-api/router"
 	"github.com/alanmathiasen/aggregator-api/services"
@@ -40,7 +41,9 @@ func main() {
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
-
+	
+	auth.InitStore()
+	
 	cfg := Config {
 		Port : os.Getenv(("PORT")),
 	}

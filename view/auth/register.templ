@@ -2,12 +2,12 @@ package login
 
 import "github.com/alanmathiasen/aggregator-api/view/layout"
 
-templ Login() {
+templ Register() {
   @layout.Base() {
-    <form class="max-w-screen-sm mx-auto" method="POST" action="/auth/login">
+    <form class="max-w-screen-sm mx-auto" method="POST" action="/auth/register">
       <div>
-        <div>Login</div>
-        <div>Enter your email below to login to your account.</div>
+        <div>Register</div>
+        <div>Enter your email below to register your account.</div>
       </div>
       <div>
         <div class="space-y-2">
@@ -50,7 +50,7 @@ templ Login() {
           class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
           type="submit"
         >
-          Login
+          Register
         </button>
       </div>
     </form>

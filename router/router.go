@@ -43,6 +43,10 @@ func Routes() http.Handler {
 	router.Post("/api/v1/publications/{id}/chapters", controllers.CreateChapterForPublication)
 
 	router.Get("/auth/login", controllers.LoginHTML)
+	router.Get("/auth/register", controllers.RegisterHTML)
+
+	router.Post("/auth/login", controllers.Login)
+	router.Post("/auth/register", controllers.Register)
 
 	router.Get("/{id}", controllers.GetPublicationHTML)
 	return router

@@ -6,7 +6,6 @@ import (
 
 	"github.com/alanmathiasen/aggregator-api/helpers"
 	"github.com/alanmathiasen/aggregator-api/services"
-	login "github.com/alanmathiasen/aggregator-api/view/auth"
 	"github.com/alanmathiasen/aggregator-api/view/dashboard"
 	"github.com/go-chi/chi"
 )
@@ -124,11 +123,3 @@ func GetPublicationHTML(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func LoginHTML(w http.ResponseWriter, r *http.Request) {
-
-	err := login.Login().Render(r.Context(), w)
-	if err != nil {
-		helpers.MessageLogs.ErrorLog.Println(err)
-		return
-	}
-}
