@@ -75,7 +75,6 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/auth/register", http.StatusFound)
 		return
 	}
-	fmt.Printf("hla")
 	hashedPassword, err := services.HashPassword(password)
 	if err != nil {
 		session.AddFlash("There was a problem with your registration")
@@ -87,7 +86,6 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/auth/register", http.StatusFound)
 		return
 	}
-	fmt.Printf("hla2")
 	user, err := services.RegisterUser(r.Context(), email, hashedPassword)
 	if err != nil {
 		session.AddFlash("This username is already taken")
