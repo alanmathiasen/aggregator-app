@@ -50,7 +50,7 @@ func CreatePublication(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	publicationCreated, err := publication.CreatePublication(publicationData) 
+	publicationCreated, err := publication.CreatePublication(r.Context(), publicationData) 
 	if err != nil {
 		helpers.MessageLogs.ErrorLog.Println(err)
 		return

@@ -17,7 +17,6 @@ type Publication struct {
 	ID string `json:"id"`
 	Title string `json:"title"`
 	Description string `json:"description"`
-	Rating float64 `json:"rating"`
 	Image string `json:"image"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
@@ -28,7 +27,6 @@ func (p *Publication) Validate() error {
 	return validation.ValidateStruct(p,
 		validation.Field(&p.Title, validation.Required, validation.Length(3, 50)),
 		validation.Field(&p.Description, validation.Required, validation.Length(3, 300)),
-		validation.Field(&p.Rating, validation.Min(0.0), validation.Max(5.0)),
 		validation.Field(&p.Image, validation.Required, is.URL),
 	)
 }
@@ -37,7 +35,7 @@ func (p *Publication) GetAllPublications() ([]*Publication, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
-	query := `SELECT id, title, description, rating, image, created_at, updated_at FROM publications`
+	query := `SELECT id, title, description, image, created_at, updated_at FROM publications`
 	rows, err := db.QueryContext(ctx, query)
 	if err != nil {
 		return nil, err
@@ -50,7 +48,6 @@ func (p *Publication) GetAllPublications() ([]*Publication, error) {
 			&publication.ID,
 			&publication.Title,
 			&publication.Description,
-			&publication.Rating,
 			&publication.Image,
 			&publication.CreatedAt,
 			&publication.UpdatedAt,
@@ -71,7 +68,7 @@ func (p *Publication) GetPublicationById(id string) (*Publication, error) {
 	defer cancel()
 
 	query := `
-		SELECT p.id, p.title, p.description, p.rating, p.image, p.created_at, p.updated_at, ps.link, ps.source 
+		SELECT p.id, p.title, p.description, p.image, p.created_at, p.updated_at, ps.link, ps.source 
 		FROM publications p
 		LEFT JOIN publication_sources ps ON p.id = ps.publication_id
 		WHERE p.id = $1
@@ -90,7 +87,6 @@ func (p *Publication) GetPublicationById(id string) (*Publication, error) {
 			&publication.ID,
 			&publication.Title,
 			&publication.Description,
-			&publication.Rating,
 			&publication.Image,
 			&publication.CreatedAt,
 			&publication.UpdatedAt,
@@ -105,13 +101,10 @@ func (p *Publication) GetPublicationById(id string) (*Publication, error) {
 	return publication, nil
 }
 
-func (p *Publication) CreatePublication(publication Publication) (*Publication, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
-	defer cancel()
-
+func (p *Publication) CreatePublication(ctx context.Context, publication Publication) (*Publication, error) {
 	query := `
-		INSERT INTO publications (title, description, rating, image, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6) 
+		INSERT INTO publications (title, description, image, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5) 
 		RETURNING id, created_at, updated_at
 		`
 
@@ -119,7 +112,6 @@ func (p *Publication) CreatePublication(publication Publication) (*Publication, 
 		query,
 		publication.Title,
 		publication.Description,
-		publication.Rating,
 		publication.Image,
 		time.Now(),
 		time.Now(),
@@ -143,10 +135,9 @@ func (p *Publication) UpdatePublication(id string, update Publication) (*Publica
 		SET
 			title = $1,
 			description = $2,
-			rating = $3,
-			image = $4,
-			updated_at = $5
-		WHERE id = $6
+			image = $3,
+			updated_at = $4
+		WHERE id = $5
 		RETURNING id, created_at, updated_at
 	`
 	err := db.QueryRowContext(
@@ -154,7 +145,6 @@ func (p *Publication) UpdatePublication(id string, update Publication) (*Publica
 		query,
 		update.Title,
 		update.Description,
-		update.Rating,
 		update.Image,
 		time.Now(),
 		id,
