@@ -15,7 +15,7 @@ func AuthenticateUser(ctx context.Context, email string, password string) (*User
 		return nil, err
 	}
 
-	if !ComparePassword(userData.Password, password) {
+	if !ComparePassword(userData.HashedPassword, password) {
 		return nil, errors.New("incorrect password")
 	}
 	return userData, nil
