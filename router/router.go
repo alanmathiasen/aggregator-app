@@ -22,6 +22,7 @@ func Routes() http.Handler {
 		MaxAge: 300,	
 	}))
 
+	router.Use(middlewares.SessionMiddleware)
 	
   router.Group(func(r chi.Router) {
 		r.Use(middlewares.AuthMiddleware)
@@ -42,12 +43,16 @@ func Routes() http.Handler {
 	router.Get("/api/v1/publications/{id}/chapters", controllers.GetAllChaptersByPublicationID)
 	router.Post("/api/v1/publications/{id}/chapters", controllers.CreateChapterForPublication)
 
-	router.Get("/auth/login", controllers.LoginHTML)
-	router.Get("/auth/register", controllers.RegisterHTML)
 
+	// Auth
 	router.Post("/auth/login", controllers.Login)
 	router.Post("/auth/register", controllers.Register)
-
+	router.Post("/auth/logout", controllers.Logout)
+	
+	
+	// Render
+	router.Get("/auth/register", controllers.RegisterHTML)
+	router.Get("/auth/login", controllers.LoginHTML)
 	router.Get("/{id}", controllers.GetPublicationHTML)
 	return router
 }

@@ -63,8 +63,6 @@ func main() {
 		Models: services.New(dbConn.DB),
 	}
 
-	err = app.Serve()
-	if err != nil {
-		log.Fatal(err)
-	}
+	log.Fatal(app.Serve())
+	
 }

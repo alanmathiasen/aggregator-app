@@ -39,7 +39,7 @@ build:
 		echo "Deleted ${BINARY}"; \
 	fi	
 	@echo "Building binary..."
-	go build -o ${BINARY} cmd/server/*.go
+	go build -o ${BINARY} cmd/aggregator/*.go
 
 run: build
 	
