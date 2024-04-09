@@ -9,12 +9,12 @@ import (
 )
 
 type PublicationSource struct {
-	ID string `json:"id"`
-	PublicationID string `json:"publication_id"`
-	Link string `json:"link"`
-	Source string `json:"source"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID            string    `json:"id"`
+	PublicationID string    `json:"publication_id"`
+	Link          string    `json:"link"`
+	Source        string    `json:"source"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
 }
 
 func (ps *PublicationSource) Validate() error {
@@ -28,7 +28,7 @@ func (ps *PublicationSource) Validate() error {
 func (ps *PublicationSource) GetAllLinksByPublicationID(publicationID string) ([]*PublicationSource, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
-	
+
 	query := `SELECT id, publication_id, link, created_at, updated_at FROM publication_links WHERE publication_id = $1`
 	rows, err := db.QueryContext(ctx, query, publicationID)
 	if err != nil {
@@ -50,8 +50,8 @@ func (ps *PublicationSource) GetAllLinksByPublicationID(publicationID string) ([
 		}
 
 		publicationSources = append(publicationSources, &publicationSource)
-	} 
-	
+	}
+
 	return publicationSources, nil
 }
 
@@ -72,12 +72,11 @@ func (ps *PublicationSource) CreatePublicationSource(publicationSource Publicati
 		time.Now(),
 		time.Now(),
 	).Scan(
-		&publicationSource.ID, 
-		&publicationSource.CreatedAt, 
+		&publicationSource.ID,
+		&publicationSource.CreatedAt,
 		&publicationSource.UpdatedAt,
 	)
-
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 

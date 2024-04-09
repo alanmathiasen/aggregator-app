@@ -6,10 +6,11 @@ import (
 )
 
 var db *sql.DB
+
 const dbTimeout = time.Second * 3
 
 type Models struct {
-	Publication Publication
+	Publication  Publication
 	JsonResponse JsonResponse
 }
 

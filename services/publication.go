@@ -9,18 +9,18 @@ import (
 )
 
 type Source struct {
-	Link string `json:"link"`
+	Link   string `json:"link"`
 	Source string `json:"source"`
 }
 
 type Publication struct {
-	ID string `json:"id"`
-	Title string `json:"title"`
-	Description string `json:"description"`
-	Image string `json:"image"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	Sources []*Source `json:"sources"`
+	ID          string    `json:"id"`
+	Title       string    `json:"title"`
+	Description string    `json:"description"`
+	Image       string    `json:"image"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+	Sources     []*Source `json:"sources"`
 }
 
 func (p *Publication) Validate() error {
@@ -40,7 +40,7 @@ func (p *Publication) GetAllPublications() ([]*Publication, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	var publications []*Publication
 	for rows.Next() {
 		var publication Publication
@@ -52,7 +52,6 @@ func (p *Publication) GetAllPublications() ([]*Publication, error) {
 			&publication.CreatedAt,
 			&publication.UpdatedAt,
 		)
-
 		if err != nil {
 			return nil, err
 		}
@@ -74,9 +73,8 @@ func (p *Publication) GetPublicationById(id string) (*Publication, error) {
 		WHERE p.id = $1
 	`
 	publication := &Publication{}
-	
-	rows, err := db.QueryContext(ctx, query, id)
 
+	rows, err := db.QueryContext(ctx, query, id)
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +106,7 @@ func (p *Publication) CreatePublication(ctx context.Context, publication Publica
 		RETURNING id, created_at, updated_at
 		`
 
-	err := db.QueryRowContext(ctx, 
+	err := db.QueryRowContext(ctx,
 		query,
 		publication.Title,
 		publication.Description,
@@ -116,19 +114,16 @@ func (p *Publication) CreatePublication(ctx context.Context, publication Publica
 		time.Now(),
 		time.Now(),
 	).Scan(&publication.ID, &publication.CreatedAt, &publication.UpdatedAt)
-	
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
-	
+
 	return &publication, nil
 }
 
 func (p *Publication) UpdatePublication(id string, update Publication) (*Publication, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
-
-
 
 	query := `
 		UPDATE publications
@@ -156,7 +151,7 @@ func (p *Publication) UpdatePublication(id string, update Publication) (*Publica
 	return &update, nil
 }
 
-func (p *Publication) DeletePublication(id string)  error {
+func (p *Publication) DeletePublication(id string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 

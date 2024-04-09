@@ -16,7 +16,6 @@ func GetAllChaptersByPublicationID(w http.ResponseWriter, r *http.Request) {
 	chapters, err := chapter.GetAllChaptersByPublicationID(r.Context(), id)
 	if len(chapters) == 0 {
 		fmt.Printf("no chapters found")
-
 	}
 	if err != nil {
 		helpers.MessageLogs.ErrorLog.Println(err)

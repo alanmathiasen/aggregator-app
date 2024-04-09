@@ -13,23 +13,22 @@ import (
 func Routes() http.Handler {
 	router := chi.NewRouter()
 	router.Use(middleware.Recoverer)
-	router.Use(cors.Handler(cors.Options {
-		AllowedOrigins: []string{"http://*", "https://*"},
-		AllowedMethods: []string{"GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders: []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
-		ExposedHeaders: []string{"Link"},
+	router.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   []string{"http://*", "https://*"},
+		AllowedMethods:   []string{"GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
 		AllowCredentials: true,
-		MaxAge: 300,	
+		MaxAge:           300,
 	}))
 
 	router.Use(middlewares.SessionMiddleware)
-	
-  router.Group(func(r chi.Router) {
+
+	router.Group(func(r chi.Router) {
 		r.Use(middlewares.AuthMiddleware)
 		r.Get("/", controllers.GetAllPublicationsHTML)
-
 	})
-	
+
 	fs := http.FileServer(http.Dir("static"))
 	router.Handle("/static/*", http.StripPrefix("/static/", fs))
 	//--------------------------REST API--------------------------
@@ -39,20 +38,19 @@ func Routes() http.Handler {
 	router.Post("/api/v1/publications", controllers.CreatePublication)
 	router.Put("/api/v1/publications/{id}", controllers.UpdatePublication)
 	router.Delete("/api/v1/publications/{id}", controllers.DeletePublication)
-	//Chapters
+	// Chapters
 	router.Get("/api/v1/publications/{id}/chapters", controllers.GetAllChaptersByPublicationID)
 	router.Post("/api/v1/publications/{id}/chapters", controllers.CreateChapterForPublication)
-
 
 	// Auth
 	router.Post("/auth/login", controllers.Login)
 	router.Post("/auth/register", controllers.Register)
 	router.Post("/auth/logout", controllers.Logout)
-	
-	
+
 	// Render
 	router.Get("/auth/register", controllers.RegisterHTML)
 	router.Get("/auth/login", controllers.LoginHTML)
 	router.Get("/{id}", controllers.GetPublicationHTML)
+
 	return router
 }

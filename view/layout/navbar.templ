@@ -1,7 +1,7 @@
 package layout
 
 templ Navbar() {
-  <header class="flex items-center h-16 px-4 border-b shrink-0 md:px-6 bg-red">
+  <header class="flex items-center h-16 px-4 border-b shrink-0 md:px-6 bg-red"> 
     <a class="flex items-center gap-2 text-lg font-semibold sm:text-base mr-4" href="#" rel="ugc">
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -21,16 +21,13 @@ templ Navbar() {
       <span class="sr-only">Manga Tracker</span>
     </a>
     <nav class="hidden font-medium sm:flex flex-row items-center gap-5 text-sm lg:gap-6">
-      <a class="font-bold" href="#" rel="ugc">
+      <a class="text-gray-500" href="/dashboard" rel="ugc">
         Dashboard
       </a>
-      <a class="text-gray-500" href="#" rel="ugc">
-        Favorites
+      <a class="font-bold" href="/discover" rel="ugc">
+        Discover
       </a>
-      <a class="text-gray-500" href="#" rel="ugc">
-        Completed
-      </a>
-      <a class="text-gray-500" href="#" rel="ugc">
+      <a class="text-gray-500" href="/settings" rel="ugc">
         Settings
       </a>
     </nav>

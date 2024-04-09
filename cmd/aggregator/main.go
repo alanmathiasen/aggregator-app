@@ -28,9 +28,9 @@ func (app *Application) Serve() error {
 		log.Fatal("Error loading .env file")
 	}
 	port := os.Getenv("PORT")
-	fmt.Println("Server running on port", port);
-	srv := &http.Server {
-		Addr: fmt.Sprintf(":%s", port),
+	fmt.Println("Server running on port", port)
+	srv := &http.Server{
+		Addr:    fmt.Sprintf(":%s", port),
 		Handler: router.Routes(),
 	}
 	return srv.ListenAndServe()
@@ -41,28 +41,29 @@ func main() {
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
-	
+
 	auth.InitStore()
-	
-	cfg := Config {
-		Port : os.Getenv(("PORT")),
+
+	cfg := Config{
+		Port: os.Getenv(("PORT")),
 	}
 
 	dsn := os.Getenv("DSN")
 	dbConn, err := db.ConnectPostgres(dsn)
+	if err != nil {
+		fmt.Println("Couldn't open DB")
+	}
 
-	
 	defer dbConn.DB.Close()
 
 	if err != nil {
 		fmt.Println("Couldn't connect to DB")
 	}
 
-	app := &Application {
+	app := &Application{
 		Config: cfg,
 		Models: services.New(dbConn.DB),
 	}
 
 	log.Fatal(app.Serve())
-	
 }

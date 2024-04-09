@@ -8,14 +8,14 @@ import (
 )
 
 type Chapter struct {
-	ID string `json:"id"`
-	PublicationID string `json:"publication_id"`
-	Number int `json:"number"`
-	Title string `json:"title"`
-	Description string `json:"description"`
-	Rating float64 `json:"rating"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID            string    `json:"id"`
+	PublicationID string    `json:"publication_id"`
+	Number        int       `json:"number"`
+	Title         string    `json:"title"`
+	Description   string    `json:"description"`
+	Rating        float64   `json:"rating"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
 }
 
 func (c *Chapter) Validate() error {
@@ -28,19 +28,17 @@ func (c *Chapter) Validate() error {
 	)
 }
 
-
 func (c *Chapter) GetAllChaptersByPublicationID(ctx context.Context, publicationID string) ([]*Chapter, error) {
 	var chapters []*Chapter
 	query := `SELECT id, publication_id, number, title, description, rating, created_at, updated_at FROM chapters WHERE publication_id = $1`
 	rows, err := db.QueryContext(ctx, query, publicationID)
-
 	if err != nil {
 		return nil, err
 	}
 
 	for rows.Next() {
 		var chapter Chapter
-		err :=rows.Scan(
+		err := rows.Scan(
 			&chapter.ID,
 			&chapter.PublicationID,
 			&chapter.Number,
@@ -66,22 +64,21 @@ func (c *Chapter) CreateChapterForPublication(ctx context.Context, publicationID
 		RETURNING id, publication_id, created_at, updated_at	
 	`
 	err := db.QueryRowContext(
-		ctx, 
-		query, 
-		publicationID, 
-		c.Number, 
-		c.Title, 
-		c.Description, 
-		c.Rating, 
-		time.Now(), 
+		ctx,
+		query,
+		publicationID,
+		c.Number,
+		c.Title,
+		c.Description,
+		c.Rating,
+		time.Now(),
 		time.Now(),
 	).Scan(
 		&data.ID,
 		&data.PublicationID,
-		&data.CreatedAt, 
+		&data.CreatedAt,
 		&data.UpdatedAt,
 	)
-
 	if err != nil {
 		return err
 	}

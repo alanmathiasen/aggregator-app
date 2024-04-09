@@ -11,18 +11,20 @@ import (
 	"github.com/alanmathiasen/aggregator-api/services"
 )
 
-type Envelope map[string] interface {}
+type Envelope map[string]interface{}
 
 type Message struct {
-	InfoLog *log.Logger
+	InfoLog  *log.Logger
 	ErrorLog *log.Logger
 }
 
-var infoLog = log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
-var errorLog = log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
+var (
+	infoLog  = log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
+	errorLog = log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
+)
 
-var MessageLogs = &Message {
-	InfoLog: infoLog,
+var MessageLogs = &Message{
+	InfoLog:  infoLog,
 	ErrorLog: errorLog,
 }
 
@@ -34,7 +36,7 @@ func ReadJSON(w http.ResponseWriter, r *http.Request, data interface{}) error {
 	if err != nil {
 		return err
 	}
-	
+
 	err = dec.Decode(&struct{}{})
 	if err != nil {
 		return errors.New("body must have only a single json object")
@@ -46,7 +48,7 @@ func ReadJSON(w http.ResponseWriter, r *http.Request, data interface{}) error {
 func WriteJSON(w http.ResponseWriter, status int, data interface{}, headers ...http.Header) error {
 	val := reflect.ValueOf(data)
 	if val.Kind() == reflect.Slice && val.IsNil() {
-			data = reflect.MakeSlice(val.Type(), 0, 0).Interface()
+		data = reflect.MakeSlice(val.Type(), 0, 0).Interface()
 	}
 	out, err := json.MarshalIndent(data, "", "\t")
 	if err != nil {
@@ -54,13 +56,12 @@ func WriteJSON(w http.ResponseWriter, status int, data interface{}, headers ...h
 	}
 	if len(headers) > 0 {
 		for key, value := range headers[0] {
-			w.Header() [key] = value
+			w.Header()[key] = value
 		}
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	_, err = w.Write(out)
-
 	if err != nil {
 		return err
 	}

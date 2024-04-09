@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/alanmathiasen/aggregator-api/auth"
 	"github.com/alanmathiasen/aggregator-api/helpers"
 	"github.com/alanmathiasen/aggregator-api/services"
 	login "github.com/alanmathiasen/aggregator-api/view/auth"
@@ -11,7 +12,7 @@ import (
 )
 
 func Login(w http.ResponseWriter, r *http.Request) {
-	session := r.Context().Value("session").(*sessions.Session)
+	session := r.Context().Value(auth.SessionKey).(*sessions.Session)
 
 	email := r.FormValue("email")
 	password := r.FormValue("password")
@@ -35,7 +36,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	user, err := services.AuthenticateUser(r.Context(), email, password)
 	if err != nil {
-		fmt.Printf(err.Error())
+		fmt.Print(err.Error())
 		session.AddFlash(err.Error())
 		err = session.Save(r, w)
 		if err != nil {
@@ -52,12 +53,12 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	http.Redirect(w, r, "/", http.StatusFound)
+	http.Redirect(w, r, "/dashboard", http.StatusFound)
 }
 
 func Register(w http.ResponseWriter, r *http.Request) {
-	session := r.Context().Value("session").(*sessions.Session)
-	
+	session := r.Context().Value(auth.SessionKey).(*sessions.Session)
+
 	email := r.FormValue("email")
 	password := r.FormValue("password")
 	if email == "" || password == "" {
@@ -89,11 +90,11 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	user, err := services.RegisterUser(r.Context(), email, hashedPassword)
 	if err != nil {
 		session.AddFlash("This username is already taken")
-		fmt.Printf(err.Error())
+		fmt.Print(err.Error())
 		err = session.Save(r, w)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
-			fmt.Printf(err.Error())
+			fmt.Print(err.Error())
 			return
 
 		}
@@ -112,7 +113,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 }
 
 func Logout(w http.ResponseWriter, r *http.Request) {
-	session := r.Context().Value("session").(*sessions.Session)
+	session := r.Context().Value(auth.SessionKey).(*sessions.Session)
 	session.Options.MaxAge = -1
 	err := session.Save(r, w)
 	if err != nil {
