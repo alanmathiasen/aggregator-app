@@ -14,13 +14,17 @@ type Source struct {
 }
 
 type Publication struct {
-	ID          string    `json:"id"`
-	Title       string    `json:"title"`
-	Description string    `json:"description"`
-	Image       string    `json:"image"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
-	Sources     []*Source `json:"sources"`
+	ID            int       `json:"id"`
+	Title         string    `json:"title"`
+	Description   string    `json:"description"`
+	Image         string    `json:"image"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
+	Sources       []*Source `json:"sources"`
+	IsFollowed    bool      `json:"is_followed"`
+	Status        *string   `json:"status"`
+	ChapterId     *int      `json:"chapter_id"`
+	ChapterNumber *string   `json:"chapter_number"`
 }
 
 func (p *Publication) Validate() error {
@@ -35,7 +39,27 @@ func (p *Publication) GetAllPublications() ([]*Publication, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
-	query := `SELECT id, title, description, image, created_at, updated_at FROM publications`
+	// query := `SELECT id, title, description, image, created_at, updated_at FROM publications`
+	// rows, err := db.QueryContext(ctx, query)
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	query := `
+			SELECT 
+			p.id, 
+			p.title, 
+			p.description, 
+			p.image, 
+			CASE WHEN upf.publication_id IS NULL THEN false ELSE true END AS is_followed,
+			upf.status, 
+			upf.chapter_id,
+			c.number AS chapter_number
+			FROM publications p
+			LEFT JOIN user_publication_follows upf ON p.id = upf.publication_id AND upf.user_id = 1
+			LEFT JOIN chapters c ON upf.chapter_id = c.id 
+		`
+
 	rows, err := db.QueryContext(ctx, query)
 	if err != nil {
 		return nil, err
@@ -49,8 +73,12 @@ func (p *Publication) GetAllPublications() ([]*Publication, error) {
 			&publication.Title,
 			&publication.Description,
 			&publication.Image,
-			&publication.CreatedAt,
-			&publication.UpdatedAt,
+			&publication.IsFollowed,
+			&publication.Status,
+			&publication.ChapterId,
+			&publication.ChapterNumber,
+			//&publication.CreatedAt,
+			//&publication.UpdatedAt,
 		)
 		if err != nil {
 			return nil, err
@@ -67,35 +95,71 @@ func (p *Publication) GetPublicationById(id string) (*Publication, error) {
 	defer cancel()
 
 	query := `
-		SELECT p.id, p.title, p.description, p.image, p.created_at, p.updated_at, ps.link, ps.source 
+		SELECT 
+			p.id, 
+			p.title, 
+			p.description, 
+			p.image, 
+			CASE WHEN upf.publication_id IS NULL THEN false ELSE true END AS is_followed,
+			upf.status, 
+			upf.chapter_id,
+			c.number AS chapter_number,
 		FROM publications p
-		LEFT JOIN publication_sources ps ON p.id = ps.publication_id
+		LEFT JOIN user_publication_follows upf ON p.id = upf.publication_id AND upf.user_id = 1
+		LEFT JOIN chapters c ON upf.chapter_id = c.id 
 		WHERE p.id = $1
 	`
+	// SELECT
+	// 		p.id,
+	// 		p.title,
+	// 		p.description,
+	// 		p.image,
+	// 		CASE WHEN upf.publication_id IS NULL THEN false ELSE true END AS is_followed,
+	// 		upf.status,
+	// 		upf.chapter_id,
+	// 		c.number AS chapter_number,
+	// 		ps.link,
+	// 		ps.source
+	// 	FROM publications p
+	// 	LEFT JOIN user_publication_follows upf ON p.id = upf.publication_id AND upf.user_id = 1
+	// 	LEFT JOIN chapters c ON upf.chapter_id = c.id
+	// 	LEFT JOIN publication_sources ps ON p.id = ps.publication_id
+	// 	WHERE p.id = $1
 	publication := &Publication{}
 
-	rows, err := db.QueryContext(ctx, query, id)
+	err := db.QueryRowContext(ctx, query, id).Scan(
+		&publication.ID,
+		&publication.Title,
+		&publication.Description,
+		&publication.Image,
+		&publication.IsFollowed,
+		&publication.Status,
+		&publication.ChapterId,
+		&publication.ChapterNumber,
+		// &publication.CreatedAt,
+		// &publication.UpdatedAt,
+		// &source.Link,
+		// &source.Source,
+	)
+	// defer rows.Close()
+	// for rows.Next() {
+	// 	var source Source
+	// 	err := rows.Scan(
+	// 		&publication.ID,
+	// 		&publication.Title,
+	// 		&publication.Description,
+	// 		&publication.Image,
+	// 		&publication.IsFollowed,
+	// 		&publication.Status,
+	// 		&publication.ChapterId,
+	// 		&publication.ChapterNumber,
+
+	// 	)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
-	for rows.Next() {
-		var source Source
-		err := rows.Scan(
-			&publication.ID,
-			&publication.Title,
-			&publication.Description,
-			&publication.Image,
-			&publication.CreatedAt,
-			&publication.UpdatedAt,
-			&source.Link,
-			&source.Source,
-		)
-		if err != nil {
-			return nil, err
-		}
-		publication.Sources = append(publication.Sources, &source)
-	}
+	// publication.Sources = append(publication.Sources, &source)
+	// }
 	return publication, nil
 }
 
@@ -110,7 +174,7 @@ func (p *Publication) CreatePublication(ctx context.Context, publication Publica
 		query,
 		publication.Title,
 		publication.Description,
-		publication.Image,
+
 		time.Now(),
 		time.Now(),
 	).Scan(&publication.ID, &publication.CreatedAt, &publication.UpdatedAt)

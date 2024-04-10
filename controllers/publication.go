@@ -3,6 +3,7 @@ package controllers
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/alanmathiasen/aggregator-api/helpers"
 	"github.com/alanmathiasen/aggregator-api/services"
@@ -10,7 +11,10 @@ import (
 	"github.com/go-chi/chi"
 )
 
-var publication services.Publication
+var (
+	publication            services.Publication
+	userPublicationFollows services.UserPublicationFollows
+)
 
 // GET /publications
 func GetAllPublications(w http.ResponseWriter, r *http.Request) {
@@ -116,6 +120,23 @@ func GetPublicationHTML(w http.ResponseWriter, r *http.Request) {
 	}
 	component := dashboard.Publication(*p)
 	err = component.Render(r.Context(), w)
+	if err != nil {
+		helpers.MessageLogs.ErrorLog.Println(err)
+		return
+	}
+}
+
+func UpsertPublicationFollowHTML(w http.ResponseWriter, r *http.Request) {
+	var publicationFollow services.UserPublicationFollows
+	id := chi.URLParam(r, "id")
+	err := json.NewDecoder(r.Body).Decode(&publicationFollow)
+	publicationFollow.ID, err = strconv.ParseUint(id, 10, 64)
+	if err != nil {
+		helpers.MessageLogs.ErrorLog.Println(err)
+		return
+
+	}
+	upf, err := userPublicationFollows.UpsertUserPublicationFollows(r.Context(), publicationFollow)
 	if err != nil {
 		helpers.MessageLogs.ErrorLog.Println(err)
 		return

@@ -10,12 +10,13 @@ import (
 )
 
 type UserPublicationFollows struct {
-	ID            uint      `json:"id"`             //"id" bigserial PRIMARY KEY,
-	UserID        uint      `json:"user_id"`        //"user_id" bigint NOT NULL,
-	PublicationID uint      `json:"publication_id"` //"publication_id" bigint NOT NULL,
-	ChapterID     uint      `json:"chapter_id"`     //"chapter_id" bigint,
-	CreatedAt     time.Time `json:"created_at"`     //"created_at" timestamptz DEFAULT (now()),
-	UpdatedAt     time.Time `json:"updated_at"`     //"updated_at" timestamptz DEFAULT (now())
+	ID            uint64    `json:"id"`
+	UserID        uint      `json:"user_id"`
+	PublicationID uint      `json:"publication_id"`
+	ChapterID     uint      `json:"chapter_id"`
+	Status        uint      `json:"status"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
 }
 
 func (f *UserPublicationFollows) Validate() error {
@@ -84,29 +85,31 @@ func (f *UserPublicationFollows) GetUserPublicationFollowsByPublicationID(ctx co
 	return userPublicationFollows, nil
 }
 
-func (f *UserPublicationFollows) CreateUserPublicationFollows(ctx context.Context, update UserPublicationFollows) (*UserPublicationFollows, error) {
+func (f *UserPublicationFollows) UpsertUserPublicationFollows(ctx context.Context, upf UserPublicationFollows) (*UserPublicationFollows, error) {
 	query := `
 		INSERT INTO user_publication_follows (user_id, publication_id, chapter_id, created_at, updated_at) 
 		VALUES ($1, $2, $3, &4, &5)
+		ON CONFLICT (user_id, publication_id)
+		DO UPDATE SET updated_at EXCLUDED.updated_at
 		RETURNING id, created_at, updated_at
 	`
 	err := db.QueryRowContext(
-		ctx, 
+		ctx,
 		query,
-		update.ID,
-		update.PublicationID,
-		update.ChapterID,
+		upf.ID,
+		upf.PublicationID,
+		upf.ChapterID,
+		upf.Status,
 		time.Now(),
 		time.Now(),
 	).Scan(
-		&update.ID,
-		&update.CreatedAt,
-		&update.UpdatedAt,
+		&upf.ID,
+		&upf.CreatedAt,
+		&upf.UpdatedAt,
 	)
-
 	if err != nil {
 		return nil, err
 	}
 
-	return &update, nil
+	return &upf, nil
 }
