@@ -12,7 +12,8 @@ import (
 
 func Routes() http.Handler {
 	router := chi.NewRouter()
-	router.Use(middleware.Recoverer)
+	router.Use(middleware.Recoverer) 
+
 	router.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"http://*", "https://*"},
 		AllowedMethods:   []string{"GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"},
@@ -21,20 +22,24 @@ func Routes() http.Handler {
 		AllowCredentials: true,
 		MaxAge:           300,
 	}))
-
 	router.Use(middlewares.SessionMiddleware)
+	
+	fs := http.FileServer(http.Dir("static"))
+	router.Handle("/static/*", http.StripPrefix("/static/", fs))
 
 	router.Group(func(r chi.Router) {
 		r.Use(middlewares.AuthMiddleware)
+
 		r.Get("/", controllers.GetAllPublicationsHTML)
+
+		r.Put("/publication/{id}/follow", controllers.UpsertPublicationFollowHTML)
 	})
 
-	fs := http.FileServer(http.Dir("static"))
-	router.Handle("/static/*", http.StripPrefix("/static/", fs))
+	
 	//--------------------------REST API--------------------------
 	// Publications
 	router.Get("/api/v1/publications", controllers.GetAllPublications)
-	router.Get("/api/v1/publications/{id}", controllers.GetPublicationById)
+	// router.Get("/api/v1/publications/{id}", controllers.GetPublicationById)
 	router.Post("/api/v1/publications", controllers.CreatePublication)
 	router.Put("/api/v1/publications/{id}", controllers.UpdatePublication)
 	router.Delete("/api/v1/publications/{id}", controllers.DeletePublication)
@@ -50,7 +55,7 @@ func Routes() http.Handler {
 	// Render
 	router.Get("/auth/register", controllers.RegisterHTML)
 	router.Get("/auth/login", controllers.LoginHTML)
-	router.Get("/{id}", controllers.GetPublicationHTML)
+	// router.Get("/{id}", controllers.GetPublicationHTML)
 
 	return router
 }

@@ -96,7 +96,6 @@ func Register(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			fmt.Print(err.Error())
 			return
-
 		}
 		http.Redirect(w, r, "/auth/register", http.StatusFound)
 		return

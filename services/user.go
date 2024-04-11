@@ -6,7 +6,7 @@ import (
 )
 
 type User struct {
-	ID             string    `json:"id"`
+	ID             uint      `json:"id"`
 	Email          string    `json:"email"`
 	HashedPassword string    `json:"password"`
 	CreatedAt      time.Time `json:"created_at"`

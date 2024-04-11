@@ -1,6 +1,8 @@
 package dashboard
 
 import (
+    "strconv"
+
     "github.com/alanmathiasen/aggregator-api/view/layout"
     "github.com/alanmathiasen/aggregator-api/services"
   )
@@ -36,7 +38,11 @@ templ DashboardPublications(publications []*services.Publication) {
 }
 
 templ Publication (publication services.Publication) {
-  <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
+  <div 
+    class="rounded-lg border bg-card text-card-foreground shadow-sm"
+    hx-swap="outerHTML"
+    id={"publication-"+strconv.Itoa(publication.ID)}
+  >
     <div class="space-y-1.5 p-6 flex flex-row items-center gap-4">
       <img
         src={publication.Image}
@@ -52,11 +58,18 @@ templ Publication (publication services.Publication) {
       </div>
       <div>
       if publication.IsFollowed {
-        <button class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 ml-auto">
-          Mark as Read
-        </button>
+        <div>
+          <button>  //class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 ml-auto">
+            Mark as Read
+          </button>
+        </div>
       } else {
-        <button class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 ml-auto">
+        <button 
+          class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 ml-auto"
+          hx-put={"/publication/" + strconv.Itoa(publication.ID) + "/follow?status=" + "Reading" + "&chapter_id=" + "1"}
+          hx-trigger="click"
+          hx-target={"#publication-"+strconv.Itoa(publication.ID)}
+        >
           Follow!
         </button>
       }

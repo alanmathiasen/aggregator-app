@@ -14,7 +14,7 @@ type UserPublicationFollows struct {
 	UserID        uint      `json:"user_id"`
 	PublicationID uint      `json:"publication_id"`
 	ChapterID     uint      `json:"chapter_id"`
-	Status        uint      `json:"status"`
+	Status        string      `json:"status"`
 	CreatedAt     time.Time `json:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at"`
 }
@@ -87,16 +87,19 @@ func (f *UserPublicationFollows) GetUserPublicationFollowsByPublicationID(ctx co
 
 func (f *UserPublicationFollows) UpsertUserPublicationFollows(ctx context.Context, upf UserPublicationFollows) (*UserPublicationFollows, error) {
 	query := `
-		INSERT INTO user_publication_follows (user_id, publication_id, chapter_id, created_at, updated_at) 
-		VALUES ($1, $2, $3, &4, &5)
+		INSERT INTO user_publication_follows (user_id, publication_id, chapter_id, status, created_at, updated_at) 
+		VALUES ($1, $2, $3, $4, $5, $6)
 		ON CONFLICT (user_id, publication_id)
-		DO UPDATE SET updated_at EXCLUDED.updated_at
+		DO UPDATE SET 
+			chapter_id = EXCLUDED.chapter_id,
+			status = EXCLUDED.status,
+			updated_at = EXCLUDED.updated_at
 		RETURNING id, created_at, updated_at
 	`
 	err := db.QueryRowContext(
 		ctx,
 		query,
-		upf.ID,
+		upf.UserID,
 		upf.PublicationID,
 		upf.ChapterID,
 		upf.Status,

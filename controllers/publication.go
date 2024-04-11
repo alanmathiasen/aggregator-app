@@ -2,13 +2,15 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
-	"strconv"
 
+	"github.com/alanmathiasen/aggregator-api/auth"
 	"github.com/alanmathiasen/aggregator-api/helpers"
 	"github.com/alanmathiasen/aggregator-api/services"
 	"github.com/alanmathiasen/aggregator-api/view/dashboard"
 	"github.com/go-chi/chi"
+	"github.com/gorilla/sessions"
 )
 
 var (
@@ -18,7 +20,14 @@ var (
 
 // GET /publications
 func GetAllPublications(w http.ResponseWriter, r *http.Request) {
-	all, err := publication.GetAllPublications()
+	session := r.Context().Value(auth.SessionKey).(*sessions.Session)
+	user, ok := session.Values["user"].(*services.User);
+	if user == nil || !ok {
+		http.Redirect(w, r, "/auth/login", http.StatusSeeOther)
+		return
+	}
+	fmt.Print(user.ID)
+	all, err := publication.GetAllPublications(user.ID)
 	if err != nil {
 		helpers.MessageLogs.ErrorLog.Println(err)
 		return
@@ -28,16 +37,16 @@ func GetAllPublications(w http.ResponseWriter, r *http.Request) {
 }
 
 // GET /publications/:id
-func GetPublicationById(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
-	publication, err := publication.GetPublicationById(id)
-	if err != nil {
-		helpers.MessageLogs.ErrorLog.Println(err)
-		return
-	}
+// func GetPublicationById(w http.ResponseWriter, r *http.Request) {
+// 	id := chi.URLParam(r, "id")
+// 	publication, err := publication.GetPublicationById(id)
+// 	if err != nil {
+// 		helpers.MessageLogs.ErrorLog.Println(err)
+// 		return
+// 	}
 
-	helpers.WriteJSON(w, http.StatusOK, publication)
-}
+// 	helpers.WriteJSON(w, http.StatusOK, publication)
+// }
 
 // POST /publications
 func CreatePublication(w http.ResponseWriter, r *http.Request) {
@@ -96,12 +105,19 @@ func DeletePublication(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetAllPublicationsHTML(w http.ResponseWriter, r *http.Request) {
-	all, err := publication.GetAllPublications()
+	session := r.Context().Value(auth.SessionKey).(*sessions.Session)
+	user, ok := session.Values["user"].(*services.User);
+	if user == nil || !ok {
+		http.Redirect(w, r, "/auth/login", http.StatusSeeOther)
+		return
+	}
+	fmt.Print(user.ID)
+	all, err := publication.GetAllPublications(user.ID)
 	if err != nil {
 		helpers.MessageLogs.ErrorLog.Println(err)
 		return
 	}
-
+	fmt.Print(*all[1])
 	component := dashboard.DashboardPublications(all)
 
 	err = component.Render(r.Context(), w)
@@ -111,32 +127,69 @@ func GetAllPublicationsHTML(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func GetPublicationHTML(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
-	p, err := publication.GetPublicationById(id)
-	if err != nil {
-		helpers.MessageLogs.ErrorLog.Println(err)
-		return
-	}
-	component := dashboard.Publication(*p)
-	err = component.Render(r.Context(), w)
-	if err != nil {
-		helpers.MessageLogs.ErrorLog.Println(err)
-		return
-	}
-}
+// func GetPublicationHTML(w http.ResponseWriter, r *http.Request) {
+// 	id := chi.URLParam(r, "id")
+// 	p, err := publication.GetPublicationById(id)
+// 	if err != nil {
+// 		helpers.MessageLogs.ErrorLog.Println(err)
+// 		return
+// 	}
+// 	component := dashboard.Publication(*p)
+// 	err = component.Render(r.Context(), w)
+// 	if err != nil {
+// 		helpers.MessageLogs.ErrorLog.Println(err)
+// 		return
+// 	}
+// }
 
 func UpsertPublicationFollowHTML(w http.ResponseWriter, r *http.Request) {
-	var publicationFollow services.UserPublicationFollows
 	id := chi.URLParam(r, "id")
-	err := json.NewDecoder(r.Body).Decode(&publicationFollow)
-	publicationFollow.ID, err = strconv.ParseUint(id, 10, 64)
+	publicationIDUint, err := helpers.StringToUint(id) 
+	if err != nil {
+		helpers.MessageLogs.ErrorLog.Println(err)
+		return
+	}
+	
+	queryParams := r.URL.Query()
+	status := queryParams.Get("status")
+	
+	chapterID := queryParams.Get("chapter_id")
+	chapterIDUint, err := helpers.StringToUint(chapterID)
+	if err != nil {
+		helpers.MessageLogs.ErrorLog.Println(err)
+		return
+	}
+
+
+	session := r.Context().Value(auth.SessionKey).(*sessions.Session)
+	user, ok := session.Values["user"].(*services.User);
+	if user == nil || !ok {
+		http.Redirect(w, r, "/auth/login", http.StatusSeeOther)
+		return
+	}
+	fmt.Print(user.ID)
+	publicationFollow := &services.UserPublicationFollows{
+		PublicationID: publicationIDUint,
+		ChapterID: chapterIDUint,
+		Status: status,
+		UserID: user.ID,
+	}
+	
+	_, err = userPublicationFollows.UpsertUserPublicationFollows(r.Context(), *publicationFollow)
+	if err != nil {
+		helpers.MessageLogs.ErrorLog.Println(err)
+		return
+	}
+	p, err := publication.GetPublicationById(id, user.ID)
+	
 	if err != nil {
 		helpers.MessageLogs.ErrorLog.Println(err)
 		return
 
 	}
-	upf, err := userPublicationFollows.UpsertUserPublicationFollows(r.Context(), publicationFollow)
+	fmt.Print(p)
+	component := dashboard.Publication(*p)
+	err = component.Render(r.Context(), w)
 	if err != nil {
 		helpers.MessageLogs.ErrorLog.Println(err)
 		return

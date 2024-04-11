@@ -1,0 +1,3 @@
+ALTER TABLE user_publication_follows 
+ADD CONSTRAINT user_publication_follows_user_id_publication_id_key 
+UNIQUE (user_id, publication_id);

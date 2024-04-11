@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"reflect"
+	"strconv"
 
 	"github.com/alanmathiasen/aggregator-api/services"
 )
@@ -77,4 +78,12 @@ func ErrorJSON(w http.ResponseWriter, err error, status ...int) {
 	payload.Error = true
 	payload.Message = err.Error()
 	WriteJSON(w, statusCode, payload)
+}
+
+func StringToUint(s string) (uint, error) {
+	parsedUint, err := strconv.ParseUint(s, 10, 64)
+	if err != nil {
+		return 0, errors.New("can't convert to uint")
+	}
+	return  uint(parsedUint), nil
 }

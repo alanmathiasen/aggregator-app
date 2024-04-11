@@ -35,7 +35,7 @@ func (p *Publication) Validate() error {
 	)
 }
 
-func (p *Publication) GetAllPublications() ([]*Publication, error) {
+func (p *Publication) GetAllPublications(userID uint) ([]*Publication, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
@@ -56,11 +56,11 @@ func (p *Publication) GetAllPublications() ([]*Publication, error) {
 			upf.chapter_id,
 			c.number AS chapter_number
 			FROM publications p
-			LEFT JOIN user_publication_follows upf ON p.id = upf.publication_id AND upf.user_id = 1
+			LEFT JOIN user_publication_follows upf ON p.id = upf.publication_id AND upf.user_id = $1
 			LEFT JOIN chapters c ON upf.chapter_id = c.id 
 		`
 
-	rows, err := db.QueryContext(ctx, query)
+	rows, err := db.QueryContext(ctx, query, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +90,7 @@ func (p *Publication) GetAllPublications() ([]*Publication, error) {
 	return publications, nil
 }
 
-func (p *Publication) GetPublicationById(id string) (*Publication, error) {
+func (p *Publication) GetPublicationById(id string, userID uint) (*Publication, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
@@ -103,9 +103,9 @@ func (p *Publication) GetPublicationById(id string) (*Publication, error) {
 			CASE WHEN upf.publication_id IS NULL THEN false ELSE true END AS is_followed,
 			upf.status, 
 			upf.chapter_id,
-			c.number AS chapter_number,
+			c.number AS chapter_number
 		FROM publications p
-		LEFT JOIN user_publication_follows upf ON p.id = upf.publication_id AND upf.user_id = 1
+		LEFT JOIN user_publication_follows upf ON p.id = upf.publication_id AND upf.user_id = $2
 		LEFT JOIN chapters c ON upf.chapter_id = c.id 
 		WHERE p.id = $1
 	`
@@ -127,7 +127,7 @@ func (p *Publication) GetPublicationById(id string) (*Publication, error) {
 	// 	WHERE p.id = $1
 	publication := &Publication{}
 
-	err := db.QueryRowContext(ctx, query, id).Scan(
+	err := db.QueryRowContext(ctx, query, id, userID).Scan(
 		&publication.ID,
 		&publication.Title,
 		&publication.Description,
