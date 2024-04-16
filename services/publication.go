@@ -174,7 +174,7 @@ func (p *Publication) CreatePublication(ctx context.Context, publication Publica
 		query,
 		publication.Title,
 		publication.Description,
-
+		publication.Image,
 		time.Now(),
 		time.Now(),
 	).Scan(&publication.ID, &publication.CreatedAt, &publication.UpdatedAt)

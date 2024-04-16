@@ -1,5 +1,65 @@
 package publication
 
-templ Index() {
-  
+// import "strconv"
+import "github.com/alanmathiasen/aggregator-api/services"
+
+
+templ Publication (publication services.Publication) {
+  <div class="card card-side bg-base-100 shadow-xl">
+    <figure><img src={publication.Image} alt="Movie"/></figure>
+    <div class="card-body">
+      <h2 class="card-title">New movie is released!</h2>
+      <p>Click the button to watch on Jetflix app.</p>
+      <div class="card-actions justify-end">
+        <button class="btn btn-primary">Watch</button>
+      </div>
+    </div>
+  </div>
+  // <div 
+  //   class="rounded-lg border bg-card text-card-foreground shadow-sm"
+  //   hx-swap="outerHTML"
+  //   id={"publication-"+strconv.Itoa(publication.ID)}
+  // >
+  //   <div class="space-y-1.5 mr-6 flex flex-row items-center gap-4"> 
+  //       <img
+  //           src={publication.Image}
+  //           alt="Manga cover"
+  //           class="h-32"
+  //       />
+  //     <div class="grid gap-1 flex-grow normal-case h-10">
+  //       <h3 class="text-2xl font-semibold whitespace-nowrap leading-none tracking-tight">{publication.Title}</h3>
+  //       <p class="text-sm text-muted-foreground">Latest Chapter: 25</p>
+  //     </div>
+  //     <div>
+  //     if publication.IsFollowed {
+  //         <button
+  //           class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 ml-auto"
+  //           hx-delete={"/publication/" + strconv.Itoa(publication.ID) + "/follow"}
+  //           hx-trigger="click"
+  //           hx-target={"#publication-"+strconv.Itoa(publication.ID)}
+  //           >
+  //           Edit v
+  //         </button>
+
+  //     } else {
+  //       <button 
+  //         class="font-semibold text-white text-xl inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 ml-auto"
+  //         hx-put={"/publication/" + strconv.Itoa(publication.ID) + "/follow?status=" + "Reading" + "&chapter_id=" + "1"}
+  //         hx-trigger="click"
+  //         hx-target={"#publication-"+strconv.Itoa(publication.ID)}
+  //       >
+  //         Follow!
+  //       </button>
+  //     }
+  //     </div>
+  //   </div>
+  // </div>
+}
+
+templ DeletedPublication() {
+<div class="rounded-lg border bg-card text-card-foreground shadow-sm">
+    <div class="space-y-1.5 p-6 flex flex-row items-center gap-4">
+      DELETED PUBLICATION
+    </div>
+  </div>  
 }

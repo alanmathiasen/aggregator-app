@@ -116,3 +116,15 @@ func (f *UserPublicationFollows) UpsertUserPublicationFollows(ctx context.Contex
 
 	return &upf, nil
 }
+
+func (upf *UserPublicationFollows) DeleteUserPublicationFollow(ctx context.Context, publicationID uint, userID uint) error {
+	query := `
+		DELETE FROM user_publication_follows upf
+		WHERE upf.publication_id = $1 AND upf.user_id = $2
+	`
+	_, err := db.ExecContext(ctx, query, publicationID, userID)
+	if err != nil  {
+		return err
+	}
+	return nil
+}

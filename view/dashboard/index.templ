@@ -1,8 +1,8 @@
 package dashboard
 
-import (
-    "strconv"
+import "github.com/alanmathiasen/aggregator-api/view/publication"
 
+import (
     "github.com/alanmathiasen/aggregator-api/view/layout"
     "github.com/alanmathiasen/aggregator-api/services"
   )
@@ -30,50 +30,9 @@ templ DashboardPublications(publications []*services.Publication) {
       </div>
       <div class="flex flex-col gap-6 max-w-6xl w-full mx-auto">
         for _, p := range publications {
-          @Publication(*p)
+          @publication.Publication(*p)
         }
       </div>
     </main>
   }
-}
-
-templ Publication (publication services.Publication) {
-  <div 
-    class="rounded-lg border bg-card text-card-foreground shadow-sm"
-    hx-swap="outerHTML"
-    id={"publication-"+strconv.Itoa(publication.ID)}
-  >
-    <div class="space-y-1.5 p-6 flex flex-row items-center gap-4">
-      <img
-        src={publication.Image}
-        alt="Manga cover"
-        width="100"
-        height="150"
-        class="object-cover w-16 h-24"
-        style="aspect-ratio:100/150;object-fit:cover"
-      />
-      <div class="grid gap-1 flex-grow">
-        <h3 class="text-2xl font-semibold whitespace-nowrap leading-none tracking-tight">{publication.Title}</h3>
-        <p class="text-sm text-muted-foreground">Latest Chapter: 25</p>
-      </div>
-      <div>
-      if publication.IsFollowed {
-        <div>
-          <button>  //class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 ml-auto">
-            Mark as Read
-          </button>
-        </div>
-      } else {
-        <button 
-          class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 ml-auto"
-          hx-put={"/publication/" + strconv.Itoa(publication.ID) + "/follow?status=" + "Reading" + "&chapter_id=" + "1"}
-          hx-trigger="click"
-          hx-target={"#publication-"+strconv.Itoa(publication.ID)}
-        >
-          Follow!
-        </button>
-      }
-      </div>
-    </div>
-  </div>
 }

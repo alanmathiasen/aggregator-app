@@ -9,6 +9,7 @@ import (
 	"github.com/alanmathiasen/aggregator-api/helpers"
 	"github.com/alanmathiasen/aggregator-api/services"
 	"github.com/alanmathiasen/aggregator-api/view/dashboard"
+	pub "github.com/alanmathiasen/aggregator-api/view/publication"
 	"github.com/go-chi/chi"
 	"github.com/gorilla/sessions"
 )
@@ -95,6 +96,7 @@ func UpdatePublication(w http.ResponseWriter, r *http.Request) {
 // DELETE /publications/:id
 func DeletePublication(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
+	fmt.Println("HOLAAA")
 	err := publication.DeletePublication(id)
 	if err != nil {
 		helpers.MessageLogs.ErrorLog.Println(err)
@@ -117,7 +119,6 @@ func GetAllPublicationsHTML(w http.ResponseWriter, r *http.Request) {
 		helpers.MessageLogs.ErrorLog.Println(err)
 		return
 	}
-	fmt.Print(*all[1])
 	component := dashboard.DashboardPublications(all)
 
 	err = component.Render(r.Context(), w)
@@ -188,7 +189,37 @@ func UpsertPublicationFollowHTML(w http.ResponseWriter, r *http.Request) {
 
 	}
 	fmt.Print(p)
-	component := dashboard.Publication(*p)
+	component := pub.Publication(*p)
+	err = component.Render(r.Context(), w)
+	if err != nil {
+		helpers.MessageLogs.ErrorLog.Println(err)
+		return
+	}
+}
+
+func DeletePublicationFollowHTML(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	publicationIDUint, err := helpers.StringToUint(id) 
+	if err != nil {
+		helpers.MessageLogs.ErrorLog.Println(err)
+		return
+	}
+
+	session := r.Context().Value(auth.SessionKey).(*sessions.Session)
+	user, ok := session.Values["user"].(*services.User);
+	if user == nil || !ok {
+		http.Redirect(w, r, "/auth/login", http.StatusSeeOther)
+		return
+	}
+	fmt.Println("HOLA")
+	err = userPublicationFollows.DeleteUserPublicationFollow(r.Context(), publicationIDUint, user.ID)
+	if err != nil {
+		helpers.MessageLogs.ErrorLog.Println(err)
+		return
+	}
+
+
+	component := pub.DeletedPublication()
 	err = component.Render(r.Context(), w)
 	if err != nil {
 		helpers.MessageLogs.ErrorLog.Println(err)
