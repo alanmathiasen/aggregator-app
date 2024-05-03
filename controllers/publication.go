@@ -2,13 +2,14 @@ package controllers
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/alanmathiasen/aggregator-api/auth"
 	"github.com/alanmathiasen/aggregator-api/helpers"
 	"github.com/alanmathiasen/aggregator-api/services"
 	"github.com/alanmathiasen/aggregator-api/view/dashboard"
+	"github.com/alanmathiasen/aggregator-api/view/discover"
+
 	pub "github.com/alanmathiasen/aggregator-api/view/publication"
 	"github.com/go-chi/chi"
 	"github.com/gorilla/sessions"
@@ -27,8 +28,8 @@ func GetAllPublications(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/auth/login", http.StatusSeeOther)
 		return
 	}
-	fmt.Print(user.ID)
-	all, err := publication.GetAllPublications(user.ID)
+
+	all, err := publication.GetAllPublications(r.Context(), user.ID)
 	if err != nil {
 		helpers.MessageLogs.ErrorLog.Println(err)
 		return
@@ -96,7 +97,6 @@ func UpdatePublication(w http.ResponseWriter, r *http.Request) {
 // DELETE /publications/:id
 func DeletePublication(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-	fmt.Println("HOLAAA")
 	err := publication.DeletePublication(id)
 	if err != nil {
 		helpers.MessageLogs.ErrorLog.Println(err)
@@ -113,15 +113,36 @@ func GetAllPublicationsHTML(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/auth/login", http.StatusSeeOther)
 		return
 	}
-	fmt.Print(user.ID)
-	all, err := publication.GetAllPublications(user.ID)
+	all, err := publication.GetAllPublications(r.Context(), user.ID)
 	if err != nil {
 		helpers.MessageLogs.ErrorLog.Println(err)
 		return
 	}
-	component := dashboard.DashboardPublications(all)
+	component := discover.DiscoverPage(all)
 
 	err = component.Render(r.Context(), w)
+	if err != nil {
+		helpers.MessageLogs.ErrorLog.Println(err)
+		return
+	}
+}
+
+func GetUserPublicationsHTML(w http.ResponseWriter, r *http.Request) {
+	session := r.Context().Value(auth.SessionKey).(*sessions.Session)
+	user, ok := session.Values["user"].(*services.User);
+	if user == nil || !ok {
+		http.Redirect(w, r, "/auth/login", http.StatusSeeOther)
+		return
+	}
+	all, err := publication.GetAllPublications(r.Context(), user.ID)
+	if err != nil {
+		helpers.MessageLogs.ErrorLog.Println(err)
+		return
+	}
+
+	component := discover.DiscoverPage(all)
+	err = component.Render(r.Context(), w)
+
 	if err != nil {
 		helpers.MessageLogs.ErrorLog.Println(err)
 		return
@@ -168,7 +189,6 @@ func UpsertPublicationFollowHTML(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/auth/login", http.StatusSeeOther)
 		return
 	}
-	fmt.Print(user.ID)
 	publicationFollow := &services.UserPublicationFollows{
 		PublicationID: publicationIDUint,
 		ChapterID: chapterIDUint,
@@ -188,8 +208,7 @@ func UpsertPublicationFollowHTML(w http.ResponseWriter, r *http.Request) {
 		return
 
 	}
-	fmt.Print(p)
-	component := pub.Publication(*p)
+	component := pub.Publication(p)
 	err = component.Render(r.Context(), w)
 	if err != nil {
 		helpers.MessageLogs.ErrorLog.Println(err)
@@ -211,7 +230,6 @@ func DeletePublicationFollowHTML(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/auth/login", http.StatusSeeOther)
 		return
 	}
-	fmt.Println("HOLA")
 	err = userPublicationFollows.DeleteUserPublicationFollow(r.Context(), publicationIDUint, user.ID)
 	if err != nil {
 		helpers.MessageLogs.ErrorLog.Println(err)
@@ -225,4 +243,27 @@ func DeletePublicationFollowHTML(w http.ResponseWriter, r *http.Request) {
 		helpers.MessageLogs.ErrorLog.Println(err)
 		return
 	}
+}
+
+func DashboardHTML(w http.ResponseWriter, r *http.Request) {
+	session := r.Context().Value(auth.SessionKey).(*sessions.Session)
+	user, ok := session.Values["user"].(*services.User);
+	if user == nil || !ok {
+		http.Redirect(w, r, "/auth/login", http.StatusSeeOther)
+		return
+	}
+
+	publications, err := publication.GetAllPublications(r.Context(), user.ID)
+	if err != nil {
+		helpers.MessageLogs.ErrorLog.Println(err)
+		return
+	}
+
+	component := dashboard.Page(publications)
+	err = component.Render(r.Context(), w)
+	if err != nil {
+		helpers.MessageLogs.ErrorLog.Println(err)
+		return
+	}
+
 }

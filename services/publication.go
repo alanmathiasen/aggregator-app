@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -25,6 +26,7 @@ type Publication struct {
 	Status        *string   `json:"status"`
 	ChapterId     *int      `json:"chapter_id"`
 	ChapterNumber *string   `json:"chapter_number"`
+	LastChapterRead *string `json:"chapter_followed"`
 }
 
 func (p *Publication) Validate() error {
@@ -35,23 +37,18 @@ func (p *Publication) Validate() error {
 	)
 }
 
-func (p *Publication) GetAllPublications(userID uint) ([]*Publication, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
-	defer cancel()
-
-	// query := `SELECT id, title, description, image, created_at, updated_at FROM publications`
-	// rows, err := db.QueryContext(ctx, query)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
+func (p *Publication) GetAllPublications(ctx context.Context, userID uint) ([]*Publication, error) {
 	query := `
 			SELECT 
 			p.id, 
 			p.title, 
 			p.description, 
 			p.image, 
-			CASE WHEN upf.publication_id IS NULL THEN false ELSE true END AS is_followed,
+			CASE 
+				WHEN upf.publication_id IS NULL THEN false 
+				WHEN upf.status = 'deleted' THEN false
+				ELSE true 
+			END AS is_followed,
 			upf.status, 
 			upf.chapter_id,
 			c.number AS chapter_number
@@ -90,6 +87,54 @@ func (p *Publication) GetAllPublications(userID uint) ([]*Publication, error) {
 	return publications, nil
 }
 
+func (p *Publication) GetUserPublicationsHTML(ctx context.Context, userID uint) ([]*Publication, error) {
+	query := `
+			SELECT 
+			p.id, 
+			p.title, 
+			p.description, 
+			p.image, 
+			CASE 
+				WHEN upf.publication_id IS NULL THEN false 
+				WHEN upf.status = 'deleted' THEN false
+				ELSE true 
+			END AS is_followed,
+			upf.status, 
+			upf.chapter_id AS last_chapter_read,
+			c.id AS chapter_id,
+			c.number AS chapter_number
+			FROM publications p
+			LEFT JOIN user_publication_follows upf ON p.id = upf.publication_id AND upf.user_id = $1
+			LEFT JOIN chapters c ON upf.chapter_id = c.id 
+		`
+		rows, err := db.QueryContext(ctx, query, userID)
+		if err != nil {
+			return nil, err
+		}
+
+		var publications []*Publication
+		for rows.Next() {
+			publication := &Publication{}
+			err := rows.Scan(
+				&publication.ID,
+				&publication.Title,
+				&publication.Image,
+				&publication.IsFollowed,
+				&publication.Status,
+				&publication.LastChapterRead,
+				&publication.ChapterId,
+				&publication.ChapterNumber,
+			)
+			
+			if err != nil {
+				return nil, err
+			}
+			fmt.Println("aca en el service bro y vos?", publication.Status)
+			publications = append(publications, publication)
+		}
+	return publications, nil
+}
+
 func (p *Publication) GetPublicationById(id string, userID uint) (*Publication, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
@@ -100,24 +145,21 @@ func (p *Publication) GetPublicationById(id string, userID uint) (*Publication, 
 			p.title, 
 			p.description, 
 			p.image, 
-			CASE WHEN upf.publication_id IS NULL THEN false ELSE true END AS is_followed,
+			CASE 
+				WHEN upf.publication_id IS NULL THEN false 
+				WHEN upf.status = 'deleted' THEN false
+				ELSE true 
+			END AS is_followed,
 			upf.status, 
 			upf.chapter_id,
 			c.number AS chapter_number
+
 		FROM publications p
 		LEFT JOIN user_publication_follows upf ON p.id = upf.publication_id AND upf.user_id = $2
 		LEFT JOIN chapters c ON upf.chapter_id = c.id 
 		WHERE p.id = $1
 	`
-	// SELECT
-	// 		p.id,
-	// 		p.title,
-	// 		p.description,
-	// 		p.image,
-	// 		CASE WHEN upf.publication_id IS NULL THEN false ELSE true END AS is_followed,
-	// 		upf.status,
-	// 		upf.chapter_id,
-	// 		c.number AS chapter_number,
+
 	// 		ps.link,
 	// 		ps.source
 	// 	FROM publications p

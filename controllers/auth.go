@@ -108,7 +108,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	http.Redirect(w, r, "/", http.StatusFound)
+	http.Redirect(w, r, "/dashboard", http.StatusFound)
 }
 
 func Logout(w http.ResponseWriter, r *http.Request) {
@@ -119,7 +119,7 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	http.Redirect(w, r, "/", http.StatusFound)
+	http.Redirect(w, r, "/auth/login", http.StatusFound)
 }
 
 func RegisterHTML(w http.ResponseWriter, r *http.Request) {

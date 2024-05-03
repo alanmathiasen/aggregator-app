@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"log"
+	"math"
 	"net/http"
 	"os"
 	"reflect"
@@ -86,4 +87,8 @@ func StringToUint(s string) (uint, error) {
 		return 0, errors.New("can't convert to uint")
 	}
 	return  uint(parsedUint), nil
+}
+
+func RoundToHalf (count float64) float64 {
+	return math.Round(count * 2) / 2
 }

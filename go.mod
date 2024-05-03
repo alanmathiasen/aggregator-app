@@ -3,7 +3,7 @@ module github.com/alanmathiasen/aggregator-api
 go 1.21.6
 
 require (
-	github.com/a-h/templ v0.2.543
+	github.com/a-h/templ v0.2.663
 	github.com/go-chi/chi v1.5.5
 	github.com/go-chi/cors v1.2.1
 	github.com/go-ozzo/ozzo-validation/v4 v4.3.0

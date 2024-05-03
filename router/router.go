@@ -27,16 +27,26 @@ func Routes() http.Handler {
 	fs := http.FileServer(http.Dir("static"))
 	router.Handle("/static/*", http.StripPrefix("/static/", fs))
 
+
+	// -------------------------HTML SERVER------------------------
+	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/dashboard", http.StatusMovedPermanently)
+	})
+	//Auth
+	router.Get("/auth/register", controllers.RegisterHTML)
+	router.Get("/auth/login", controllers.LoginHTML)
+	//Loggged in
 	router.Group(func(r chi.Router) {
 		r.Use(middlewares.AuthMiddleware)
 
-		r.Get("/", controllers.GetAllPublicationsHTML)
-
+		r.Get("/discover", controllers.GetAllPublicationsHTML)
+		r.Get("/dashboard", controllers.DashboardHTML)
 		r.Put("/publication/{id}/follow", controllers.UpsertPublicationFollowHTML)
 		r.Delete("/publication/{id}/follow", controllers.DeletePublicationFollowHTML)
 	})
-
+	// router.Get("/{id}", controllers.GetPublicationHTML)
 	
+
 	//--------------------------REST API--------------------------
 	// Publications
 	router.Get("/api/v1/publications", controllers.GetAllPublications)
@@ -53,10 +63,8 @@ func Routes() http.Handler {
 	router.Post("/auth/register", controllers.Register)
 	router.Post("/auth/logout", controllers.Logout)
 
-	// Render
-	router.Get("/auth/register", controllers.RegisterHTML)
-	router.Get("/auth/login", controllers.LoginHTML)
-	// router.Get("/{id}", controllers.GetPublicationHTML)
+	
 
 	return router
+	
 }

@@ -29,21 +29,22 @@ migrate_up:
 migrate_down:
 	${MIGRATE} down
 
-build:
-# generate css from tailwind
+generate:
+	# generate css from tailwind
 	@npm run build
-# generate go files from templ templates
+	# generate go files from templ templates
 	@templ generate
+
+build: generate
 	if [ -f "${BINARY}" ]; then \
 		rm ${BINARY}; \
 		echo "Deleted ${BINARY}"; \
 	fi	
 	@echo "Building binary..."
-	go build -o ${BINARY} cmd/aggregator/*.go
+	go build -o tmp/${BINARY} cmd/aggregator/*.go 
 
 run: build
-	
-	./${BINARY}	
+	./tmp/${BINARY}
 # @echo "api started..."
 
 stop:
