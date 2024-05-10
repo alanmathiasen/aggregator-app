@@ -2,96 +2,159 @@ package publication
 
 // import "strconv"
 import (
-  "github.com/alanmathiasen/aggregator-api/services"
-  "strconv"
-  "github.com/alanmathiasen/aggregator-api/view/shared"
-  "fmt"
- )
+	"github.com/alanmathiasen/aggregator-api/services"
+	"strconv"
+	"github.com/alanmathiasen/aggregator-api/view/shared"
+	"time"
+	"fmt"
+)
 
-func getPublicationStatusToSendFromItsFollowed(p *services.Publication) string {
-  fmt.Println("is followed", p.IsFollowed)
-  var status string
-  if (p.IsFollowed){
-    status = "deleted"
-  } else {
-    status = "readingg"
-  }
-  fmt.Println(status)
-  return status
+const (
+	STATUS_READING = "reading"
+	STATUS_DROPPED = "dropped"
+)
+
+templ Publication(publication *services.Publication) {
+	<div
+		class="bg-base-100 shadow-sm flex"
+		hx-swap="outerHTML"
+		id={ "publication-" + strconv.Itoa(publication.ID) }
+	>
+		<div class="w-full h-full flex-none relative ">
+			<img class="absolute w-full h-full object-cover" src={ publication.Image } alt="Movie"/>
+		</div>
+		<div class="flex w-full justify-between mx-3 my-1 ">
+			<div class="flex flex-col">
+				<h2 class="card-title mb-1 text-lg">{ publication.Title }</h2>
+				<div class="mt-1">
+					@shared.Rating(4.4)
+				</div>
+				<p class="text-sm text-secondary mt-2">Tracking: 2354</p>
+			</div>
+			<div class="flex flex-col card-actions gap-[1px] items-end">
+				<button
+					class="btn btn-primary p-0 h-6 w-6 hover:bg-accent"
+				>
+					<span>
+						@shared.FollowIcon("h-4", "w-", "stroke-base-100")
+					</span>
+				</button>
+				<button
+					class="btn btn-primary p-0 h-6 w-6 hover:bg-accent"
+				>
+					<span>
+						@shared.FollowIcon("h-4", "w-4", "stroke-base-100")
+					</span>
+				</button>
+				<button
+					class="btn btn-primary p-0 h-6 w-6 hover:bg-accent"
+				>
+					@shared.FollowIcon("h-4", "w-4", "stroke-base-100")
+				</button>
+				<button
+					hx-put={ "/publication/" + strconv.Itoa(publication.ID) + "/follow" }
+					hx-trigger="click"
+					hx-target={ "#publication-" + strconv.Itoa(publication.ID) }
+					class="btn btn-primary p-0 h-6 w-6 hover:bg-accent"
+				>
+					if publication.IsFollowed {
+						Follow
+					} else {
+						Stop following
+					}
+				</button>
+			</div>
+		</div>
+	</div>
 }
 
-templ Publication (publication *services.Publication) {
-  <div 
-    class="bg-base-100 shadow-sm flex h-[171px]"
-    hx-swap="outerHTML"
-    id={"publication-"+strconv.Itoa(publication.ID)}  
-  >
-    <div class="w-[120px] h-[171px] flex-none relative ">
-      <img class="absolute w-full h-full object-cover" src={publication.Image} alt="Movie"/>
-    </div>
-    <div class="flex w-full justify-between mx-3 my-1 ">
-      <div class="flex flex-col">
-        <h2 class="card-title mb-1 text-lg">{publication.Title}</h2>
-        <div class="mt-1"> @shared.Rating(4.4) </div>
-        <p class="text-sm text-secondary mt-2">Tracking: 2354</p>
-      </div>
-      <div class="flex flex-col card-actions gap-[1px] items-end">
-        <button 
-          class="btn btn-primary p-0 h-6 w-6 hover:bg-accent"
-        >
-          <span>
-            @shared.FollowIcon("h-4", "w-", "stroke-base-100")
-          </span>
-        </button>
-       <button 
-          class="btn btn-primary p-0 h-6 w-6 hover:bg-accent"
-        >
-          <span>
-            @shared.FollowIcon("h-4", "w-4", "stroke-base-100")
-          </span>
-        </button>
-         <button 
-          class="btn btn-primary p-0 h-6 w-6 hover:bg-accent"
-        >
-         @shared.FollowIcon("h-4", "w-4", "stroke-base-100")
-        </button>
-        <button 
-          hx-put={"/publication/" + strconv.Itoa(publication.ID) + "/follow?status=" + getPublicationStatusToSendFromItsFollowed(publication) + "&chapter_id=" + "1"}
-          hx-trigger="click"
-          hx-target={"#publication-"+strconv.Itoa(publication.ID)}
-          class="btn btn-primary p-0 h-6 w-6 hover:bg-accent"
-        >
-          if publication.IsFollowed {
-            Follow
-          } else {
-           Stop following
-          }
-        </button>
-      </div>
-    </div>
-  </div>
+func prt(p *services.Publication) string {
+	fmt.Println(p.ChapterNumbers)
+	return p.ChapterNumbers[len(p.ChapterNumbers)-1]
 }
 
-templ Button(publication *services.Publication){
-  <button 
-          hx-put={"/publication/" + strconv.Itoa(publication.ID) + "/follow?status=" + getPublicationStatusToSendFromItsFollowed(publication) + "&chapter_id=" + "1"}
-          hx-trigger="click"
-          hx-target={"#publication-"+strconv.Itoa(publication.ID)}
-          class="btn btn-primary p-0 h-6 w-6 hover:bg-accent"
-        >
-          if publication.IsFollowed {
-            Follow
-          } else {
-           Stop following
-          }
-        </button>
+templ Buttons(p *services.Publication) {
+	<div class="join">
+		<div class="tooltip" data-tip="Mark last chapter as seen.">
+			<form
+				hx-put={ "/publication/" + strconv.Itoa(p.ID) + "/follow" }
+				hx-target={ "#publication-" + strconv.Itoa(p.ID) }
+			>
+				<input type="hidden" name="chapter_number" value={ prt(p) }/>
+				<button
+					type="submit"
+					class="btn btn-primary hover:bg-accent join-item p-2"
+				>
+					@shared.CheckIcon("h-32", "w-32", "stroke-base-100", "fill-base-100")
+				</button>
+			</form>
+		</div>
+		<form
+			hx-put={ "/publication/" + strconv.Itoa(p.ID) + "/follow" }
+			hx-trigger="click"
+			hx-target={ "#publication-" + strconv.Itoa(p.ID) }
+		>
+			<input type="hidden" name="status" value={ STATUS_READING }/>
+			<input type="hidden" name="chapter_number" value={ p.ChapterNumbers[len(p.ChapterNumbers)-1] }/>
+			<button
+				class="btn btn-primary hover:bg-accent join-item p-2"
+			>
+				@shared.EditIcon()
+			</button>
+		</form>
+	</div>
 }
 
-templ DeletedPublication() {
-<div class="rounded-lg border bg-card text-card-foreground shadow-sm">
-    <div class="space-y-1.5 p-6 flex flex-row items-center gap-4">
-      DELETED PUBLICATION
-    </div>
-  </div>  
+// templ FollowButton(p *services.Publication) {
+// 	<button
+// 		hx-put={ "/publication/" + strconv.Itoa(p.ID) + "/follow?status=" + getPublicationStatusToSendFromItsFollowed(p) + "&chapter_id=" + "1" }
+// 		hx-trigger="click"
+// 		hx-target={ "#publication-" + strconv.Itoa(p.ID) }
+// 		class="btn btn-primary hover:bg-accent"
+// 	>
+// 		if p.IsFollowed {
+// 			<div>
+// 				@shared.FollowIcon()
+// 			</div>
+// 		} else {
+// 			<div class="max-h-32">
+// 				// @shared.EditIcon("h-32", "w-32", "stroke-base-100", "fill-base-100")
+// 			</div>
+// 		}
+// 	</button>
+// }
+templ DashboardPublication(p *services.Publication) {
+	<div
+		class="bg-base-100 shadow-sm flex "
+		hx-swap="outerHTML"
+		id={ "publication-" + strconv.Itoa(p.ID) }
+	>
+		<div class="flex-none ">
+			<img class=" max-w-32 h-full object-cover" src={ p.Image } alt="Movie"/>
+		</div>
+		<div class="flex-grow mx-3 my-1 flex flex-col justify-between">
+			<div>
+				<h2 class="card-title mb-1 text-lg">{ p.Title }</h2>
+				<div class="mt-1">
+					<div>
+						Chapter { "1" }
+					</div>
+					<div class="text-xs text-neutral-500 font-semibold">
+						last read: { time.Date(2024, time.March, 10, 20, 03, 18, 0, time.UTC).Format("02 Jan 2006") }
+					</div>
+				</div>
+				<div class="mt-1">
+					<div>
+						Chapter 10
+					</div>
+					<div class="text-xs text-neutral-500 font-semibold">
+						last released: { time.Now().Format("02 Jan 2006") }
+					</div>
+				</div>
+			</div>
+			<div class="flex justify-end">
+				@Buttons(p)
+			</div>
+		</div>
+	</div>
 }
-

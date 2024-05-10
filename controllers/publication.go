@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/alanmathiasen/aggregator-api/auth"
@@ -23,7 +24,7 @@ var (
 // GET /publications
 func GetAllPublications(w http.ResponseWriter, r *http.Request) {
 	session := r.Context().Value(auth.SessionKey).(*sessions.Session)
-	user, ok := session.Values["user"].(*services.User);
+	user, ok := session.Values["user"].(*services.User)
 	if user == nil || !ok {
 		http.Redirect(w, r, "/auth/login", http.StatusSeeOther)
 		return
@@ -108,7 +109,7 @@ func DeletePublication(w http.ResponseWriter, r *http.Request) {
 
 func GetAllPublicationsHTML(w http.ResponseWriter, r *http.Request) {
 	session := r.Context().Value(auth.SessionKey).(*sessions.Session)
-	user, ok := session.Values["user"].(*services.User);
+	user, ok := session.Values["user"].(*services.User)
 	if user == nil || !ok {
 		http.Redirect(w, r, "/auth/login", http.StatusSeeOther)
 		return
@@ -127,27 +128,27 @@ func GetAllPublicationsHTML(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func GetUserPublicationsHTML(w http.ResponseWriter, r *http.Request) {
-	session := r.Context().Value(auth.SessionKey).(*sessions.Session)
-	user, ok := session.Values["user"].(*services.User);
-	if user == nil || !ok {
-		http.Redirect(w, r, "/auth/login", http.StatusSeeOther)
-		return
-	}
-	all, err := publication.GetAllPublications(r.Context(), user.ID)
-	if err != nil {
-		helpers.MessageLogs.ErrorLog.Println(err)
-		return
-	}
+// func GetUserPublicationsHTML(w http.ResponseWriter, r *http.Request) {
+// 	session := r.Context().Value(auth.SessionKey).(*sessions.Session)
+// 	user, ok := session.Values["user"].(*services.User)
+// 	if user == nil || !ok {
+// 		http.Redirect(w, r, "/auth/login", http.StatusSeeOther)
+// 		return
+// 	}
+// 	all, err := publication.GetAllPublications(r.Context(), user.ID)
+// 	if err != nil {
+// 		helpers.MessageLogs.ErrorLog.Println(err)
+// 		return
+// 	}
 
-	component := discover.DiscoverPage(all)
-	err = component.Render(r.Context(), w)
+// 	component := discover.DiscoverPage(all)
+// 	err = component.Render(r.Context(), w)
 
-	if err != nil {
-		helpers.MessageLogs.ErrorLog.Println(err)
-		return
-	}
-}
+// 	if err != nil {
+// 		helpers.MessageLogs.ErrorLog.Println(err)
+// 		return
+// 	}
+// }
 
 // func GetPublicationHTML(w http.ResponseWriter, r *http.Request) {
 // 	id := chi.URLParam(r, "id")
@@ -166,49 +167,48 @@ func GetUserPublicationsHTML(w http.ResponseWriter, r *http.Request) {
 
 func UpsertPublicationFollowHTML(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-	publicationIDUint, err := helpers.StringToUint(id) 
+	publicationIDUint, err := helpers.StringToUint(id)
 	if err != nil {
 		helpers.MessageLogs.ErrorLog.Println(err)
 		return
 	}
-	
-	queryParams := r.URL.Query()
-	status := queryParams.Get("status")
-	
-	chapterID := queryParams.Get("chapter_id")
+
+	status := r.FormValue("status")
+
+	// chapterID := queryParams.Get("chapter_id")
+	chapterID := r.FormValue("chapter_number")
 	chapterIDUint, err := helpers.StringToUint(chapterID)
 	if err != nil {
 		helpers.MessageLogs.ErrorLog.Println(err)
 		return
 	}
 
-
 	session := r.Context().Value(auth.SessionKey).(*sessions.Session)
-	user, ok := session.Values["user"].(*services.User);
+	user, ok := session.Values["user"].(*services.User)
 	if user == nil || !ok {
 		http.Redirect(w, r, "/auth/login", http.StatusSeeOther)
 		return
 	}
 	publicationFollow := &services.UserPublicationFollows{
 		PublicationID: publicationIDUint,
-		ChapterID: chapterIDUint,
-		Status: status,
-		UserID: user.ID,
+		ChapterID:     chapterIDUint,
+		Status:        status,
+		UserID:        user.ID,
 	}
-	
+
 	_, err = userPublicationFollows.UpsertUserPublicationFollows(r.Context(), *publicationFollow)
 	if err != nil {
 		helpers.MessageLogs.ErrorLog.Println(err)
 		return
 	}
 	p, err := publication.GetPublicationById(id, user.ID)
-	
+
 	if err != nil {
 		helpers.MessageLogs.ErrorLog.Println(err)
 		return
 
 	}
-	component := pub.Publication(p)
+	component := pub.DashboardPublication(p)
 	err = component.Render(r.Context(), w)
 	if err != nil {
 		helpers.MessageLogs.ErrorLog.Println(err)
@@ -218,14 +218,14 @@ func UpsertPublicationFollowHTML(w http.ResponseWriter, r *http.Request) {
 
 func DeletePublicationFollowHTML(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-	publicationIDUint, err := helpers.StringToUint(id) 
+	publicationIDUint, err := helpers.StringToUint(id)
 	if err != nil {
 		helpers.MessageLogs.ErrorLog.Println(err)
 		return
 	}
 
 	session := r.Context().Value(auth.SessionKey).(*sessions.Session)
-	user, ok := session.Values["user"].(*services.User);
+	user, ok := session.Values["user"].(*services.User)
 	if user == nil || !ok {
 		http.Redirect(w, r, "/auth/login", http.StatusSeeOther)
 		return
@@ -236,8 +236,7 @@ func DeletePublicationFollowHTML(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-
-	component := pub.DeletedPublication()
+	component := pub.Publication(&publication)
 	err = component.Render(r.Context(), w)
 	if err != nil {
 		helpers.MessageLogs.ErrorLog.Println(err)
@@ -247,7 +246,7 @@ func DeletePublicationFollowHTML(w http.ResponseWriter, r *http.Request) {
 
 func DashboardHTML(w http.ResponseWriter, r *http.Request) {
 	session := r.Context().Value(auth.SessionKey).(*sessions.Session)
-	user, ok := session.Values["user"].(*services.User);
+	user, ok := session.Values["user"].(*services.User)
 	if user == nil || !ok {
 		http.Redirect(w, r, "/auth/login", http.StatusSeeOther)
 		return
@@ -255,6 +254,7 @@ func DashboardHTML(w http.ResponseWriter, r *http.Request) {
 
 	publications, err := publication.GetAllPublications(r.Context(), user.ID)
 	if err != nil {
+		fmt.Println("Error", err)
 		helpers.MessageLogs.ErrorLog.Println(err)
 		return
 	}

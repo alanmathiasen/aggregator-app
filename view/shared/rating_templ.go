@@ -57,7 +57,7 @@ func Rating(rating float64) templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%.1f", rating) + " out of 5 stars")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/shared/rating.templ`, Line: 20, Col: 93}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/shared/rating.templ`, Line: 20, Col: 88}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {

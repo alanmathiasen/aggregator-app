@@ -41,7 +41,7 @@ func Page(publications []*services.Publication) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			for _, p := range publications {
-				templ_7745c5c3_Err = publication.Publication(p).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = publication.DashboardPublication(p).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}

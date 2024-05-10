@@ -27,23 +27,27 @@ func GetAllChaptersByPublicationID(w http.ResponseWriter, r *http.Request) {
 func CreateChapterForPublication(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	var chapterData services.Chapter
+
 	err := helpers.ReadJSON(w, r, &chapterData)
+	if err != nil {
+		helpers.MessageLogs.ErrorLog.Println(err)
+		helpers.ErrorJSON(w, err, http.StatusBadRequest)
+		return
+	}
+
 	err = chapterData.Validate()
 	if err != nil {
 		helpers.MessageLogs.ErrorLog.Println(err)
 		helpers.ErrorJSON(w, err, http.StatusBadRequest)
 		return
 	}
-	err = chapterData.Validate()
-	if err != nil {
-		helpers.MessageLogs.ErrorLog.Println(err)
-		helpers.ErrorJSON(w, err, http.StatusBadRequest)
-		return
-	}
+
 	err = chapter.CreateChapterForPublication(r.Context(), id, &chapterData)
 	if err != nil {
 		helpers.MessageLogs.ErrorLog.Println(err)
 		helpers.ErrorJSON(w, err, http.StatusBadRequest)
+		return
 	}
+
 	helpers.WriteJSON(w, http.StatusCreated, chapterData)
 }

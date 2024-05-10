@@ -3,6 +3,7 @@ package helpers
 import (
 	"encoding/json"
 	"errors"
+	"io"
 	"log"
 	"math"
 	"net/http"
@@ -40,7 +41,7 @@ func ReadJSON(w http.ResponseWriter, r *http.Request, data interface{}) error {
 	}
 
 	err = dec.Decode(&struct{}{})
-	if err != nil {
+	if err != io.EOF {
 		return errors.New("body must have only a single json object")
 	}
 
@@ -86,9 +87,9 @@ func StringToUint(s string) (uint, error) {
 	if err != nil {
 		return 0, errors.New("can't convert to uint")
 	}
-	return  uint(parsedUint), nil
+	return uint(parsedUint), nil
 }
 
-func RoundToHalf (count float64) float64 {
-	return math.Round(count * 2) / 2
+func RoundToHalf(count float64) float64 {
+	return math.Round(count*2) / 2
 }
