@@ -128,43 +128,6 @@ func GetAllPublicationsHTML(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// func GetUserPublicationsHTML(w http.ResponseWriter, r *http.Request) {
-// 	session := r.Context().Value(auth.SessionKey).(*sessions.Session)
-// 	user, ok := session.Values["user"].(*services.User)
-// 	if user == nil || !ok {
-// 		http.Redirect(w, r, "/auth/login", http.StatusSeeOther)
-// 		return
-// 	}
-// 	all, err := publication.GetAllPublications(r.Context(), user.ID)
-// 	if err != nil {
-// 		helpers.MessageLogs.ErrorLog.Println(err)
-// 		return
-// 	}
-
-// 	component := discover.DiscoverPage(all)
-// 	err = component.Render(r.Context(), w)
-
-// 	if err != nil {
-// 		helpers.MessageLogs.ErrorLog.Println(err)
-// 		return
-// 	}
-// }
-
-// func GetPublicationHTML(w http.ResponseWriter, r *http.Request) {
-// 	id := chi.URLParam(r, "id")
-// 	p, err := publication.GetPublicationById(id)
-// 	if err != nil {
-// 		helpers.MessageLogs.ErrorLog.Println(err)
-// 		return
-// 	}
-// 	component := dashboard.Publication(*p)
-// 	err = component.Render(r.Context(), w)
-// 	if err != nil {
-// 		helpers.MessageLogs.ErrorLog.Println(err)
-// 		return
-// 	}
-// }
-
 func UpsertPublicationFollowHTML(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	publicationIDUint, err := helpers.StringToUint(id)
@@ -175,8 +138,7 @@ func UpsertPublicationFollowHTML(w http.ResponseWriter, r *http.Request) {
 
 	status := r.FormValue("status")
 
-	// chapterID := queryParams.Get("chapter_id")
-	chapterID := r.FormValue("chapter_number")
+	chapterID := r.FormValue("chapter_id")
 	chapterIDUint, err := helpers.StringToUint(chapterID)
 	if err != nil {
 		helpers.MessageLogs.ErrorLog.Println(err)
@@ -201,7 +163,7 @@ func UpsertPublicationFollowHTML(w http.ResponseWriter, r *http.Request) {
 		helpers.MessageLogs.ErrorLog.Println(err)
 		return
 	}
-	p, err := publication.GetPublicationById(id, user.ID)
+	p, err := publication.GetPublicationById(r.Context(), id, user.ID)
 
 	if err != nil {
 		helpers.MessageLogs.ErrorLog.Println(err)

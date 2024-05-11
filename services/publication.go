@@ -2,10 +2,11 @@ package services
 
 import (
 	"context"
+	"database/sql"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"sort"
-	"strconv"
-	"strings"
 	"time"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -30,7 +31,7 @@ type Publication struct {
 	LastReadChapterId       *int      `json:"chapter_id"`
 	LastReadChapterNumber   *string   `json:"chapter_number"`
 	LastChapterReadAt       *string   `json:"chapter_followed"`
-	ChapterNumbers          []string  `json:"chapter_numbers"`
+	Chapters                []Chapter `json:"chapter_numbers"`
 }
 
 func (p *Publication) Validate() error {
@@ -41,106 +42,40 @@ func (p *Publication) Validate() error {
 	)
 }
 
-func (p *Publication) GetPublicationById(id string, userID uint) (*Publication, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
-	defer cancel()
+func (p *Publication) fetchPublications(ctx context.Context, userID uint, id string) ([]*Publication, error) {
 
-	query := `
-		SELECT 
-			p.id, 
-			p.title, 
-			p.description, 
-			p.image, 
-			CASE 
-				WHEN upf.publication_id IS NULL THEN false 
-				WHEN upf.status = 'deleted' THEN false
-				ELSE true 
-			END AS is_followed,
-			upf.status, 
-			upf.chapter_id AS last_chapter_read_id,
-			c.number AS last_read_chapter_number,
-			upf.updated_at AS last_chapter_read_at,
-			ARRAY_AGG(c.number) AS chapter_numbers 
-			FROM publications p
-			LEFT JOIN user_publication_follows upf ON p.id = upf.publication_id AND upf.user_id = $1
-			LEFT JOIN chapters c ON upf.chapter_id = c.id
-			LEFT JOIN chapters c2 ON p.id = c2.publication_id
-			WHERE p.id = $2
-			GROUP BY p.id, upf.publication_id, upf.status, upf.chapter_id, upf.updated_at, c.number
-	`
+	baseQuery := `
+        SELECT 
+        p.id, 
+        p.title, 
+        p.description, 
+        p.image, 
+        CASE 
+            WHEN upf.publication_id IS NULL THEN false 
+            WHEN upf.status = 'deleted' THEN false
+            ELSE true 
+        END AS is_followed,
+        upf.status, 
+        upf.chapter_id AS last_read_chapter_id,
+        c2.number AS last_read_chapter_number,
+        upf.updated_at AS last_chapter_read_at, 
+        COALESCE(json_agg(c)) AS chapters
+        FROM publications p
+        LEFT JOIN user_publication_follows upf ON p.id = upf.publication_id AND upf.user_id = $1
+        LEFT JOIN chapters c ON p.id = c.publication_id 
+        LEFT JOIN chapters c2 ON upf.chapter_id = c2.id
+    `
+	var rows *sql.Rows
+	var err error
 
-	// 		ps.link,
-	// 		ps.source
-	// 	FROM publications p
-	// 	LEFT JOIN user_publication_follows upf ON p.id = upf.publication_id AND upf.user_id = 1
-	// 	LEFT JOIN chapters c ON upf.chapter_id = c.id
-	// 	LEFT JOIN publication_sources ps ON p.id = ps.publication_id
-	// 	WHERE p.id = $1
-	publication := &Publication{}
-	var chapterNumbers string
-
-	err := db.QueryRowContext(ctx, query, userID, id).Scan(
-		&publication.ID,
-		&publication.Title,
-		&publication.Description,
-		&publication.Image,
-		&publication.IsFollowed,
-		&publication.PublicationFollowStatus,
-		&publication.LastReadChapterId,
-		&publication.LastReadChapterNumber,
-		&publication.LastChapterReadAt,
-		&chapterNumbers,
-		// &publication.CreatedAt,
-		// &publication.UpdatedAt,
-		// &source.Link,
-		// &source.Source,
-	)
-
-	if err != nil {
-		return nil, err
+	if id != "" {
+		query := baseQuery + " WHERE p.id = $2 GROUP BY p.id, upf.publication_id, upf.status, upf.chapter_id, upf.updated_at, c2.number"
+		rows, err = db.QueryContext(ctx, query, userID, id)
+	} else {
+		query := baseQuery + " GROUP BY p.id, upf.publication_id, upf.status, upf.chapter_id, upf.updated_at, c2.number"
+		rows, err = db.QueryContext(ctx, query, userID)
 	}
-	numbers := strings.Split(strings.Trim(chapterNumbers, "{}"), ",")
-	chapters := make([]int, len(numbers))
-	for i, number := range numbers {
-		chapters[i], _ = strconv.Atoi(number)
-	}
-	sort.Ints(chapters)
-	sortedChapters := make([]string, len(chapters))
-	for i, chapter := range chapters {
-		sortedChapters[i] = fmt.Sprint(chapter)
-	}
-	publication.ChapterNumbers = sortedChapters
 
-	// publication.Sources = append(publication.Sources, &source)
-	// }
-	return publication, nil
-}
-
-func (p *Publication) GetAllPublications(ctx context.Context, userID uint) ([]*Publication, error) {
-	query := `
-	SELECT 
-	p.id, 
-	p.title, 
-	p.description, 
-	p.image, 
-	CASE 
-		WHEN upf.publication_id IS NULL THEN false 
-		WHEN upf.status = 'deleted' THEN false
-		ELSE true 
-	END AS is_followed,
-	upf.status, 
-	upf.chapter_id AS last_read_chapter_id,
-	c2.number AS last_read_chapter_number,
-  	upf.updated_at AS last_chapter_read_at, 
-	ARRAY_AGG(c.number) AS chapter_numbers
-	FROM publications p
-	LEFT JOIN user_publication_follows upf ON p.id = upf.publication_id AND upf.user_id = $1
-	LEFT JOIN chapters c ON p.id = c.publication_id 
-	LEFT JOIN chapters c2 ON upf.chapter_id = c2.id
-	GROUP BY p.id, upf.publication_id, upf.status, upf.chapter_id, upf.updated_at, c2.number
-`
-
-	rows, err := db.QueryContext(ctx, query, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -148,7 +83,7 @@ func (p *Publication) GetAllPublications(ctx context.Context, userID uint) ([]*P
 	var publications []*Publication
 	for rows.Next() {
 		var publication Publication
-		var chapterNumbers string
+		var chaptersJSON string
 
 		err := rows.Scan(
 			&publication.ID,
@@ -160,36 +95,162 @@ func (p *Publication) GetAllPublications(ctx context.Context, userID uint) ([]*P
 			&publication.LastReadChapterId,
 			&publication.LastReadChapterNumber,
 			&publication.LastChapterReadAt,
-			&chapterNumbers,
-			//&publication.CreatedAt,
-			//&publication.UpdatedAt,
+			&chaptersJSON,
 		)
 		if err != nil {
 			return nil, err
 		}
-		numbers := strings.Split(strings.Trim(chapterNumbers, "{}"), ",")
-		chapters := make([]int, len(numbers))
-		for i, number := range numbers {
-			chapters[i], _ = strconv.Atoi(number)
+		var chapters []Chapter
+		if err := json.Unmarshal([]byte(chaptersJSON), &chapters); err != nil {
+			return nil, err
 		}
-		sort.Ints(chapters)
-		sortedChapters := make([]string, len(chapters))
-		for i, chapter := range chapters {
-			sortedChapters[i] = fmt.Sprint(chapter)
-		}
-		publication.ChapterNumbers = sortedChapters
+		sort.Slice(chapters, func(i, j int) bool {
+			return chapters[i].Number > chapters[j].Number
+		})
+		publication.Chapters = chapters
 		publications = append(publications, &publication)
 	}
 
-	// pubs, err := json.MarshalIndent(publications, "", " ")
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	// fmt.Println(string(pubs))
-
 	return publications, nil
 }
+
+func (p *Publication) GetPublicationById(ctx context.Context, id string, userID uint) (*Publication, error) {
+	publications, err := p.fetchPublications(ctx, userID, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(publications) == 0 {
+		return nil, errors.New("no publication found")
+	}
+
+	return publications[0], nil
+}
+
+func (p *Publication) GetAllPublications(ctx context.Context, userID uint) ([]*Publication, error) {
+	return p.fetchPublications(ctx, userID, "")
+}
+
+// func (p *Publication) GetPublicationById(id string, userID uint) (*Publication, error) {
+// 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
+// 	defer cancel()
+
+// 	query := `
+// 		SELECT
+// 			p.id,
+// 			p.title,
+// 			p.description,
+// 			p.image,
+// 			CASE
+// 				WHEN upf.publication_id IS NULL THEN false
+// 				WHEN upf.status = 'deleted' THEN false
+// 				ELSE true
+// 			END AS is_followed,
+// 			upf.status,
+// 			upf.chapter_id AS last_chapter_read_id,
+// 			c2.number AS last_read_chapter_number,
+// 			upf.updated_at AS last_chapter_read_at,
+// 			COALESCE(json_agg(c)) AS chapters
+// 			FROM publications p
+// 			LEFT JOIN user_publication_follows upf ON p.id = upf.publication_id AND upf.user_id = $1
+// 			LEFT JOIN chapters c ON p.id = c.publication_id
+// 			LEFT JOIN chapters c2 ON upf.chapter_id = c2.id
+// 			WHERE p.id = $2
+// 			GROUP BY p.id, upf.publication_id, upf.status, upf.chapter_id, upf.updated_at, c2.number
+// 	`
+// 	publication := &Publication{}
+// 	var chaptersJSON string
+
+// 	err := db.QueryRowContext(ctx, query, userID, id).Scan(
+// 		&publication.ID,
+// 		&publication.Title,
+// 		&publication.Description,
+// 		&publication.Image,
+// 		&publication.IsFollowed,
+// 		&publication.PublicationFollowStatus,
+// 		&publication.LastReadChapterId,
+// 		&publication.LastReadChapterNumber,
+// 		&publication.LastChapterReadAt,
+// 		&chaptersJSON,
+// 	)
+
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	var chapters []Chapter
+// 	if err := json.Unmarshal([]byte(chaptersJSON), &chapters); err != nil {
+// 		return nil, err
+// 	}
+// 	sort.Slice(chapters, func(i, j int) bool {
+// 		return chapters[i].Number > chapters[j].Number
+// 	})
+// 	publication.Chapters = chapters
+
+// 	return publication, nil
+// }
+
+// func (p *Publication) GetAllPublications(ctx context.Context, userID uint) ([]*Publication, error) {
+// 	query := `
+// 		SELECT
+// 		p.id,
+// 		p.title,
+// 		p.description,
+// 		p.image,
+// 		CASE
+// 			WHEN upf.publication_id IS NULL THEN false
+// 			WHEN upf.status = 'deleted' THEN false
+// 			ELSE true
+// 		END AS is_followed,
+// 		upf.status,
+// 		upf.chapter_id AS last_read_chapter_id,
+// 		c2.number AS last_read_chapter_number,
+// 		upf.updated_at AS last_chapter_read_at,
+// 		COALESCE(json_agg(c)) AS chapters
+// 		FROM publications p
+// 		LEFT JOIN user_publication_follows upf ON p.id = upf.publication_id AND upf.user_id = $1
+// 		LEFT JOIN chapters c ON p.id = c.publication_id
+// 		LEFT JOIN chapters c2 ON upf.chapter_id = c2.id
+// 		GROUP BY p.id, upf.publication_id, upf.status, upf.chapter_id, upf.updated_at, c2.number
+// 	`
+
+// 	rows, err := db.QueryContext(ctx, query, userID)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	var publications []*Publication
+// 	for rows.Next() {
+// 		var publication Publication
+// 		var chaptersJSON string
+
+// 		err := rows.Scan(
+// 			&publication.ID,
+// 			&publication.Title,
+// 			&publication.Description,
+// 			&publication.Image,
+// 			&publication.IsFollowed,
+// 			&publication.PublicationFollowStatus,
+// 			&publication.LastReadChapterId,
+// 			&publication.LastReadChapterNumber,
+// 			&publication.LastChapterReadAt,
+// 			&chaptersJSON,
+// 		)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		var chapters []Chapter
+// 		if err := json.Unmarshal([]byte(chaptersJSON), &chapters); err != nil {
+// 			return nil, err
+// 		}
+// 		sort.Slice(chapters, func(i, j int) bool {
+// 			return chapters[i].Number > chapters[j].Number
+// 		})
+// 		publication.Chapters = chapters
+// 		publications = append(publications, &publication)
+// 	}
+
+// 	return publications, nil
+// }
 
 func (p *Publication) GetUserPublicationsHTML(ctx context.Context, userID uint) ([]*Publication, error) {
 	query := `

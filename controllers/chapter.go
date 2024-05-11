@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/alanmathiasen/aggregator-api/helpers"
@@ -14,9 +13,6 @@ var chapter services.Chapter
 func GetAllChaptersByPublicationID(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	chapters, err := chapter.GetAllChaptersByPublicationID(r.Context(), id)
-	if len(chapters) == 0 {
-		fmt.Printf("no chapters found")
-	}
 	if err != nil {
 		helpers.MessageLogs.ErrorLog.Println(err)
 		helpers.ErrorJSON(w, err, http.StatusBadRequest)

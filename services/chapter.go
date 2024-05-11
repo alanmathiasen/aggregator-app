@@ -10,8 +10,8 @@ import (
 )
 
 type Chapter struct {
-	ID            string    `json:"id"`
-	PublicationID string    `json:"publication_id"`
+	ID            int       `json:"id"`
+	PublicationID int       `json:"publication_id"`
 	Number        string    `json:"number"`
 	Title         string    `json:"title"`
 	Description   string    `json:"description"`

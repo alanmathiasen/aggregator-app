@@ -12,6 +12,7 @@ import "bytes"
 
 // import "strconv"
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/alanmathiasen/aggregator-api/services"
 	"github.com/alanmathiasen/aggregator-api/view/shared"
@@ -60,7 +61,7 @@ func Publication(publication *services.Publication) templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(publication.Title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/publication/index.templ`, Line: 27, Col: 59}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/publication/index.templ`, Line: 28, Col: 59}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -140,9 +141,20 @@ func Publication(publication *services.Publication) templ.Component {
 	})
 }
 
-func prt(p *services.Publication) string {
-	fmt.Println(p.ChapterNumbers)
-	return p.ChapterNumbers[len(p.ChapterNumbers)-1]
+func lastChapterID(p *services.Publication) string {
+	for _, c := range p.Chapters {
+		json, err := json.MarshalIndent(c, "", "\t")
+		if err != nil {
+			return ""
+		}
+		fmt.Println(string(json))
+	}
+	if len(p.Chapters) == 0 {
+		return ""
+	}
+	lastChapterID := strconv.Itoa(p.Chapters[len(p.Chapters)-1].ID)
+	fmt.Println("LAST CHAPTER ID: ", lastChapterID)
+	return lastChapterID
 }
 
 func Buttons(p *services.Publication) templ.Component {
@@ -174,11 +186,19 @@ func Buttons(p *services.Publication) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\"><input type=\"hidden\" name=\"chapter_number\" value=\"")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\" hx-swap=\"outerHTML\"><input type=\"hidden\" name=\"status\" value=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(prt(p)))
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(STATUS_READING))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\"> <input type=\"hidden\" name=\"chapter_id\" value=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(lastChapterID(p)))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -190,39 +210,7 @@ func Buttons(p *services.Publication) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</button></form></div><form hx-put=\"")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString("/publication/" + strconv.Itoa(p.ID) + "/follow"))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\" hx-trigger=\"click\" hx-target=\"")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString("#publication-" + strconv.Itoa(p.ID)))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\"><input type=\"hidden\" name=\"status\" value=\"")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(STATUS_READING))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\"> <input type=\"hidden\" name=\"chapter_number\" value=\"")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(p.ChapterNumbers[len(p.ChapterNumbers)-1]))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\"> <button class=\"btn btn-primary hover:bg-accent join-item p-2\">")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</button></form></div><form><button class=\"btn btn-primary hover:bg-accent join-item p-2\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -295,7 +283,7 @@ func DashboardPublication(p *services.Publication) templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(p.Title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/publication/index.templ`, Line: 136, Col: 49}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/publication/index.templ`, Line: 150, Col: 49}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -308,7 +296,7 @@ func DashboardPublication(p *services.Publication) templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs("1")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/publication/index.templ`, Line: 139, Col: 19}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/publication/index.templ`, Line: 153, Col: 19}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -321,7 +309,7 @@ func DashboardPublication(p *services.Publication) templ.Component {
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(time.Date(2024, time.March, 10, 20, 03, 18, 0, time.UTC).Format("02 Jan 2006"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/publication/index.templ`, Line: 142, Col: 97}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/publication/index.templ`, Line: 156, Col: 97}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
@@ -334,7 +322,7 @@ func DashboardPublication(p *services.Publication) templ.Component {
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(time.Now().Format("02 Jan 2006"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/publication/index.templ`, Line: 150, Col: 55}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/publication/index.templ`, Line: 164, Col: 55}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
