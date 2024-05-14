@@ -12,12 +12,13 @@ var user User
 func AuthenticateUser(ctx context.Context, email string, password string) (*User, error) {
 	userData, err := user.GetUserByEmail(ctx, email)
 	if err != nil {
-		return nil, err
+		return nil, errors.New("incorrect email")
 	}
 
 	if !ComparePassword(userData.HashedPassword, password) {
 		return nil, errors.New("incorrect password")
 	}
+
 	return userData, nil
 }
 

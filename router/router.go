@@ -12,7 +12,7 @@ import (
 
 func Routes() http.Handler {
 	router := chi.NewRouter()
-	router.Use(middleware.Recoverer) 
+	router.Use(middleware.Recoverer)
 
 	router.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"http://*", "https://*"},
@@ -23,18 +23,17 @@ func Routes() http.Handler {
 		MaxAge:           300,
 	}))
 	router.Use(middlewares.SessionMiddleware)
-	
+
 	fs := http.FileServer(http.Dir("static"))
 	router.Handle("/static/*", http.StripPrefix("/static/", fs))
-
 
 	// -------------------------HTML SERVER------------------------
 	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/dashboard", http.StatusMovedPermanently)
 	})
 	//Auth
-	router.Get("/auth/register", controllers.RegisterHTML)
-	router.Get("/auth/login", controllers.LoginHTML)
+	router.Get("/auth/register", controllers.RegisterPage)
+	router.Get("/auth/login", controllers.LoginPage)
 	//Loggged in
 	router.Group(func(r chi.Router) {
 		r.Use(middlewares.AuthMiddleware)
@@ -45,7 +44,6 @@ func Routes() http.Handler {
 		r.Delete("/publication/{id}/follow", controllers.DeletePublicationFollowHTML)
 	})
 	// router.Get("/{id}", controllers.GetPublicationHTML)
-	
 
 	//--------------------------REST API--------------------------
 	// Publications
@@ -63,8 +61,6 @@ func Routes() http.Handler {
 	router.Post("/auth/register", controllers.Register)
 	router.Post("/auth/logout", controllers.Logout)
 
-	
-
 	return router
-	
+
 }

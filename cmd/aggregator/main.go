@@ -23,10 +23,6 @@ type Application struct {
 }
 
 func (app *Application) Serve() error {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
 	port := os.Getenv("PORT")
 	fmt.Println("Server running on port", port)
 	srv := &http.Server{

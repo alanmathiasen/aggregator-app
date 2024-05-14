@@ -122,7 +122,8 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/auth/login", http.StatusFound)
 }
 
-func RegisterHTML(w http.ResponseWriter, r *http.Request) {
+// ****************** PAGES ******************
+func RegisterPage(w http.ResponseWriter, r *http.Request) {
 	component := login.Register()
 	err := component.Render(r.Context(), w)
 	if err != nil {
@@ -131,8 +132,20 @@ func RegisterHTML(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func LoginHTML(w http.ResponseWriter, r *http.Request) {
-	component := login.Login()
+func LoginPage(w http.ResponseWriter, r *http.Request) {
+	session := r.Context().Value(auth.SessionKey).(*sessions.Session)
+	flashes := session.Flashes()
+	var errorMessage string
+	for _, f := range flashes {
+		errorMessage += f.(string)
+	}
+	fmt.Println("HOLA")
+	if err := session.Save(r, w); err != nil {
+		helpers.MessageLogs.ErrorLog.Println(err)
+		return
+	}
+	component := login.Login(errorMessage)
+
 	err := component.Render(r.Context(), w)
 	if err != nil {
 		helpers.MessageLogs.ErrorLog.Println(err)

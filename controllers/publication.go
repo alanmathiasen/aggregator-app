@@ -39,18 +39,6 @@ func GetAllPublications(w http.ResponseWriter, r *http.Request) {
 	helpers.WriteJSON(w, http.StatusOK, helpers.Envelope{"publications": all})
 }
 
-// GET /publications/:id
-// func GetPublicationById(w http.ResponseWriter, r *http.Request) {
-// 	id := chi.URLParam(r, "id")
-// 	publication, err := publication.GetPublicationById(id)
-// 	if err != nil {
-// 		helpers.MessageLogs.ErrorLog.Println(err)
-// 		return
-// 	}
-
-// 	helpers.WriteJSON(w, http.StatusOK, publication)
-// }
-
 // POST /publications
 func CreatePublication(w http.ResponseWriter, r *http.Request) {
 	var publicationData services.Publication
