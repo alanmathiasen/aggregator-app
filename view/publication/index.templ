@@ -22,7 +22,7 @@ templ Publication(publication *services.Publication) {
 		id={ "publication-" + strconv.Itoa(publication.ID) }
 	>
 		<div class="w-full h-full flex-none relative ">
-			<img class="absolute w-full h-full object-cover" src={ publication.Image } alt="Movie"/>
+			// <img class="absolute w-full h-full object-cover" src={ publication.Image } alt="Movie"/>
 		</div>
 		<div class="flex w-full justify-between mx-3 my-1 ">
 			<div class="flex flex-col">
@@ -81,8 +81,19 @@ func lastChapterID(p *services.Publication) string {
 		return ""
 	}
 	lastChapterID := strconv.Itoa(p.Chapters[len(p.Chapters)-1].ID)
-	fmt.Println("LAST CHAPTER ID: ", lastChapterID)
 	return lastChapterID
+}
+
+func disableMarkLastAsReadBtn(p *services.Publication) string {
+	fmt.Println(len(p.Chapters), p.Chapters[len(p.Chapters)-1].Number == *p.LastReadChapterNumber)
+	disabledClass := "btn-disabled"
+	if len(p.Chapters) == 0 {
+		return disabledClass
+	}
+	if p.Chapters[len(p.Chapters)-1].Number == *p.LastReadChapterNumber {
+		return disabledClass
+	}
+	return ""
 }
 
 templ Buttons(p *services.Publication) {
@@ -97,46 +108,109 @@ templ Buttons(p *services.Publication) {
 				<input type="hidden" name="chapter_id" value={ lastChapterID(p) }/>
 				<button
 					type="submit"
-					class="btn btn-primary hover:bg-accent join-item p-2"
+					class={ "btn join-item p-2 " + disableMarkLastAsReadBtn(p) }
 				>
 					@shared.CheckIcon("h-32", "w-32", "stroke-base-100", "fill-base-100")
 				</button>
 			</form>
 		</div>
-		// 	<form
-		// hx-put={ "/publication/" + strconv.Itoa(p.ID) + "/follow" } 
-		// 		hx-trigger="click"
-		// 		hx-target={ "#publication-" + strconv.Itoa(p.ID) }
-		// 	>
-		<form>
-			//<input type="hidden" name="chapter_id" value={ lastChapterID(p) }/>
-			<button
-				class="btn btn-primary hover:bg-accent join-item p-2"
-			>
+		<div x-data="{ modalOpen: false }" class="join-item">
+			<button @click="modalOpen =!modalOpen" class="btn join-item p-2">
 				@shared.EditIcon()
 			</button>
-		</form>
+			<div x-show="modalOpen" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+				<div x-show="modalOpen" class="flex items-end justify-center min-h-screen px-4 text-center md:items-center sm:block sm:p-0">
+					<div
+						x-cloak
+						@click="modalOpen = false"
+						x-transition:enter="transition ease-out duration-300 transform"
+						x-transition:enter-start="opacity-0"
+						x-transition:enter-end="opacity-100"
+						x-transition:leave="transition ease-in duration-200 transform"
+						x-transition:leave-start="opacity-100"
+						x-transition:leave-end="opacity-0"
+						class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-40"
+						aria-hidden="true"
+					></div>
+					<div
+						x-cloak
+						x-show="modalOpen"
+						x-transition:enter="transition ease-out duration-300 transform"
+						x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+						x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+						x-transition:leave="transition ease-in duration-200 transform"
+						x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+						x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+						class="inline-block w-full max-w-xl p-8 my-20 overflow-hidden text-left transition-all transform bg-white rounded-lg shadow-xl 2xl:max-w-2xl"
+					>
+						<div class="flex items-center justify-between">
+							<h1 class="text-xl font-medium text-gray-800 ">Edit { p.Title }</h1>
+							<button @click="modalOpen = false" class="text-gray-600 focus:outline-none hover:text-gray-700">
+								<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+								</svg>
+							</button>
+						</div>
+						// <p class="mt-2 text-sm text-gray-500 ">
+						// 	Add your teammate to your team and start work to get things done
+						// </p>
+						<form
+							class="mt-5 flex flex-col gap-2"
+							hx-put={ "/publication/" + strconv.Itoa(p.ID) + "/follow" }
+							hx-target={ "#publication-" + strconv.Itoa(p.ID) }
+							hx-swap="outerHTML"
+						>
+							<label class="form-controll w-full">
+								<div class="label">
+									<span class="label-text">Episode</span>
+									// <span class="label-text-alt">Alt label</span>
+								</div>
+								<select class="select select-bordered w-full " name="chapter_id">
+									<option disabled selected>Select episode</option>
+									for _, c := range p.Chapters {
+										<option value={ strconv.Itoa(c.ID) }>{ "Chapter " + c.Number + ", " + c.Title }</option>
+									}
+									// 
+									// <option>Normal Orange</option>
+									// <option>Normal Tomato</option>
+								</select>
+							</label>
+							<label class="form-controll w-full">
+								<div class="label">
+									<span class="label-text">Status</span>
+									// <span class="label-text-alt">Alt label</span>
+								</div>
+								<select class="select select-bordered w-full" name="status">
+									<option disabled selected>Select status</option>
+									// TODO add statuses table
+									<option value={ STATUS_READING }>Reading</option>
+									<option value={ STATUS_READING }>On hold</option>
+									<option value={ STATUS_DROPPED }>Dropped</option>
+								</select>
+							</label>
+							<label class="form-controll w-full">
+								<div class="label">
+									<span class="label-text">Source</span>
+									// <span class="label-text-alt">Alt label</span>
+								</div>
+								<select class="select select-bordered w-full ">
+									<option disabled selected>Select source</option>
+									// TODO add statuses table
+									<option value="amazon">Netflix</option>
+									<option value="amazon">Amazon prime</option>
+								</select>
+							</label>
+							<div class="flex justify-end mt-6">
+								<button type="submit" class="btn">Edit</button>
+							</div>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
 	</div>
 }
 
-// templ FollowButton(p *services.Publication) {
-// 	<button
-// 		hx-put={ "/publication/" + strconv.Itoa(p.ID) + "/follow?status=" + getPublicationStatusToSendFromItsFollowed(p) + "&chapter_id=" + "1" }
-// 		hx-trigger="click"
-// 		hx-target={ "#publication-" + strconv.Itoa(p.ID) }
-// 		class="btn btn-primary hover:bg-accent"
-// 	>
-// 		if p.IsFollowed {
-// 			<div>
-// 				@shared.FollowIcon()
-// 			</div>
-// 		} else {
-// 			<div class="max-h-32">
-// 				// @shared.EditIcon("h-32", "w-32", "stroke-base-100", "fill-base-100")
-// 			</div>
-// 		}
-// 	</button>
-// }
 templ DashboardPublication(p *services.Publication) {
 	<div
 		class="bg-base-100 shadow-sm flex "
@@ -144,25 +218,33 @@ templ DashboardPublication(p *services.Publication) {
 		id={ "publication-" + strconv.Itoa(p.ID) }
 	>
 		<div class="flex-none ">
-			<img class=" max-w-32 h-full object-cover" src={ p.Image } alt="Movie"/>
+			// <img class=" max-w-32 h-full object-cover" src={ p.Image } alt="Movie"/>
 		</div>
 		<div class="flex-grow mx-3 my-1 flex flex-col justify-between">
 			<div>
 				<h2 class="card-title mb-1 text-lg">{ p.Title }</h2>
 				<div class="mt-1">
 					<div>
-						Chapter { "1" }
+						if p.LastReadChapterNumber == nil {
+							No chapters read yet
+						} else {
+							Last watched: Chapter { *p.LastReadChapterNumber }
+						}
 					</div>
 					<div class="text-xs text-neutral-500 font-semibold">
-						last read: { time.Date(2024, time.March, 10, 20, 03, 18, 0, time.UTC).Format("02 Jan 2006") }
+						{ p.LastChapterReadAt.Format("02 Jan 2006") }
 					</div>
 				</div>
 				<div class="mt-1">
 					<div>
-						Chapter 10
+						if len(p.Chapters) == 0 {
+							No chapters available
+						} else {
+							Last released: Chapter { p.Chapters[len(p.Chapters)-1].Number }
+						}
 					</div>
 					<div class="text-xs text-neutral-500 font-semibold">
-						last released: { time.Now().Format("02 Jan 2006") }
+						{ time.Now().Format("02 Jan 2006") }
 					</div>
 				</div>
 			</div>

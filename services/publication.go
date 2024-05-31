@@ -19,19 +19,19 @@ type Source struct {
 }
 
 type Publication struct {
-	ID                      int       `json:"id"`
-	Title                   string    `json:"title"`
-	Description             string    `json:"description"`
-	Image                   string    `json:"image"`
-	CreatedAt               time.Time `json:"created_at"`
-	UpdatedAt               time.Time `json:"updated_at"`
-	Sources                 []*Source `json:"sources"`
-	IsFollowed              bool      `json:"is_followed"`
-	PublicationFollowStatus *string   `json:"status"`
-	LastReadChapterId       *int      `json:"chapter_id"`
-	LastReadChapterNumber   *string   `json:"chapter_number"`
-	LastChapterReadAt       *string   `json:"chapter_followed"`
-	Chapters                []Chapter `json:"chapter_numbers"`
+	ID                      int        `json:"id"`
+	Title                   string     `json:"title"`
+	Description             string     `json:"description"`
+	Image                   string     `json:"image"`
+	CreatedAt               time.Time  `json:"created_at"`
+	UpdatedAt               time.Time  `json:"updated_at"`
+	Sources                 []*Source  `json:"sources"`
+	IsFollowed              bool       `json:"is_followed"`
+	PublicationFollowStatus *string    `json:"status"`
+	LastReadChapterId       *int       `json:"chapter_id"`
+	LastReadChapterNumber   *string    `json:"last_read_chapter_number"`
+	LastChapterReadAt       *time.Time `json:"last_chapter_read_at"`
+	Chapters                []*Chapter `json:"chapters"`
 }
 
 func (p *Publication) Validate() error {
@@ -59,12 +59,14 @@ func (p *Publication) fetchPublications(ctx context.Context, userID uint, id str
         upf.chapter_id AS last_read_chapter_id,
         c2.number AS last_read_chapter_number,
         upf.updated_at AS last_chapter_read_at, 
-        COALESCE(json_agg(c)) AS chapters
+		json_agg(c) FILTER (WHERE c IS NOT NULL) AS chapters
         FROM publications p
         LEFT JOIN user_publication_follows upf ON p.id = upf.publication_id AND upf.user_id = $1
         LEFT JOIN chapters c ON p.id = c.publication_id 
         LEFT JOIN chapters c2 ON upf.chapter_id = c2.id
     `
+	//COALESCE(json_agg(c)) AS chapters
+
 	var rows *sql.Rows
 	var err error
 
@@ -83,7 +85,7 @@ func (p *Publication) fetchPublications(ctx context.Context, userID uint, id str
 	var publications []*Publication
 	for rows.Next() {
 		var publication Publication
-		var chaptersJSON string
+		var chaptersJSON sql.NullString
 
 		err := rows.Scan(
 			&publication.ID,
@@ -100,17 +102,32 @@ func (p *Publication) fetchPublications(ctx context.Context, userID uint, id str
 		if err != nil {
 			return nil, err
 		}
-		var chapters []Chapter
-		if err := json.Unmarshal([]byte(chaptersJSON), &chapters); err != nil {
-			return nil, err
+		if chaptersJSON.Valid && chaptersJSON.String != "" {
+			var chapters []*Chapter
+			if err := json.Unmarshal([]byte(chaptersJSON.String), &chapters); err != nil {
+				return nil, err
+			}
+			sort.Slice(chapters, func(i, j int) bool {
+				return chapters[i].Number < chapters[j].Number
+			})
+			publication.Chapters = chapters
+		} else {
+			publication.Chapters = make([]*Chapter, 0)
 		}
-		sort.Slice(chapters, func(i, j int) bool {
-			return chapters[i].Number > chapters[j].Number
-		})
-		publication.Chapters = chapters
+		// var chapters []*Chapter
+		// if err := json.Unmarshal([]byte(chaptersJSON), &chapters); err != nil {
+		// 	return nil, err
+		// }
+		// fmt.Println(string(chaptersJSON))
+		// sort.Slice(chapters, func(i, j int) bool {
+		// 	return chapters[i].Number > chapters[j].Number
+		// })
+		// publication.Chapters = chapters
 		publications = append(publications, &publication)
 	}
 
+	data, err := json.MarshalIndent(publications, "", "  ")
+	fmt.Println(string(data))
 	return publications, nil
 }
 
