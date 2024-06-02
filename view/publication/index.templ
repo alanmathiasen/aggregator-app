@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"github.com/alanmathiasen/aggregator-api/view/shared"
 	"time"
-	"fmt"
-	"encoding/json"
+	// "fmt"
+	// "encoding/json"
 )
 
 const (
@@ -70,13 +70,13 @@ templ Publication(publication *services.Publication) {
 }
 
 func lastChapterID(p *services.Publication) string {
-	for _, c := range p.Chapters {
-		json, err := json.MarshalIndent(c, "", "\t")
-		if err != nil {
-			return ""
-		}
-		fmt.Println(string(json))
-	}
+	// for _, c := range p.Chapters {
+	// 	json, err := json.MarshalIndent(c, "", "\t")
+	// 	if err != nil {
+	// 		return ""
+	// 	}
+	// 	fmt.Println(string(json))
+	// }
 	if len(p.Chapters) == 0 {
 		return ""
 	}
@@ -85,7 +85,6 @@ func lastChapterID(p *services.Publication) string {
 }
 
 func disableMarkLastAsReadBtn(p *services.Publication) string {
-	fmt.Println(len(p.Chapters), p.Chapters[len(p.Chapters)-1].Number == *p.LastReadChapterNumber)
 	disabledClass := "btn-disabled"
 	if len(p.Chapters) == 0 {
 		return disabledClass
@@ -218,7 +217,7 @@ templ DashboardPublication(p *services.Publication) {
 		id={ "publication-" + strconv.Itoa(p.ID) }
 	>
 		<div class="flex-none ">
-			// <img class=" max-w-32 h-full object-cover" src={ p.Image } alt="Movie"/>
+			<img class=" max-w-32 h-full object-cover" src={ p.Image } alt="Movie"/>
 		</div>
 		<div class="flex-grow mx-3 my-1 flex flex-col justify-between">
 			<div>

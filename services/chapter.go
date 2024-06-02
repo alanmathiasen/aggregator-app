@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"fmt"
 	"regexp"
 	"time"
 
@@ -58,8 +57,6 @@ func (c *Chapter) GetAllChaptersByPublicationID(ctx context.Context, publication
 }
 
 func (c *Chapter) CreateChapterForPublication(ctx context.Context, publicationID string, data *Chapter) error {
-	fmt.Println("NUMBER: " + c.Number)
-	fmt.Println("TITLE: " + c.Title)
 	query := `
 		INSERT INTO chapters (publication_id, number, title, created_at, updated_at) 
 		VALUES ($1, $2, $3, $4, $5)

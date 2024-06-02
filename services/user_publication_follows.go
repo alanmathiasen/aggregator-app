@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -14,7 +13,7 @@ type UserPublicationFollows struct {
 	UserID        uint      `json:"user_id"`
 	PublicationID uint      `json:"publication_id"`
 	ChapterID     uint      `json:"chapter_id"`
-	Status        string      `json:"status"`
+	Status        string    `json:"status"`
 	CreatedAt     time.Time `json:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at"`
 }
@@ -59,7 +58,6 @@ func (f *UserPublicationFollows) GetAllUserPublicationFollows(userID uint) ([]*U
 		data = append(data, &userPublicationFollows)
 	}
 
-	fmt.Println(query)
 	return data, nil
 }
 
@@ -123,7 +121,7 @@ func (upf *UserPublicationFollows) DeleteUserPublicationFollow(ctx context.Conte
 		WHERE upf.publication_id = $1 AND upf.user_id = $2
 	`
 	_, err := db.ExecContext(ctx, query, publicationID, userID)
-	if err != nil  {
+	if err != nil {
 		return err
 	}
 	return nil

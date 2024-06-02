@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"sort"
 	"time"
 
@@ -43,7 +42,6 @@ func (p *Publication) Validate() error {
 }
 
 func (p *Publication) fetchPublications(ctx context.Context, userID uint, id string) ([]*Publication, error) {
-
 	baseQuery := `
         SELECT 
         p.id, 
@@ -65,7 +63,6 @@ func (p *Publication) fetchPublications(ctx context.Context, userID uint, id str
         LEFT JOIN chapters c ON p.id = c.publication_id 
         LEFT JOIN chapters c2 ON upf.chapter_id = c2.id
     `
-	//COALESCE(json_agg(c)) AS chapters
 
 	var rows *sql.Rows
 	var err error
@@ -114,20 +111,10 @@ func (p *Publication) fetchPublications(ctx context.Context, userID uint, id str
 		} else {
 			publication.Chapters = make([]*Chapter, 0)
 		}
-		// var chapters []*Chapter
-		// if err := json.Unmarshal([]byte(chaptersJSON), &chapters); err != nil {
-		// 	return nil, err
-		// }
-		// fmt.Println(string(chaptersJSON))
-		// sort.Slice(chapters, func(i, j int) bool {
-		// 	return chapters[i].Number > chapters[j].Number
-		// })
-		// publication.Chapters = chapters
+
 		publications = append(publications, &publication)
 	}
 
-	data, err := json.MarshalIndent(publications, "", "  ")
-	fmt.Println(string(data))
 	return publications, nil
 }
 
@@ -146,178 +133,6 @@ func (p *Publication) GetPublicationById(ctx context.Context, id string, userID 
 
 func (p *Publication) GetAllPublications(ctx context.Context, userID uint) ([]*Publication, error) {
 	return p.fetchPublications(ctx, userID, "")
-}
-
-// func (p *Publication) GetPublicationById(id string, userID uint) (*Publication, error) {
-// 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
-// 	defer cancel()
-
-// 	query := `
-// 		SELECT
-// 			p.id,
-// 			p.title,
-// 			p.description,
-// 			p.image,
-// 			CASE
-// 				WHEN upf.publication_id IS NULL THEN false
-// 				WHEN upf.status = 'deleted' THEN false
-// 				ELSE true
-// 			END AS is_followed,
-// 			upf.status,
-// 			upf.chapter_id AS last_chapter_read_id,
-// 			c2.number AS last_read_chapter_number,
-// 			upf.updated_at AS last_chapter_read_at,
-// 			COALESCE(json_agg(c)) AS chapters
-// 			FROM publications p
-// 			LEFT JOIN user_publication_follows upf ON p.id = upf.publication_id AND upf.user_id = $1
-// 			LEFT JOIN chapters c ON p.id = c.publication_id
-// 			LEFT JOIN chapters c2 ON upf.chapter_id = c2.id
-// 			WHERE p.id = $2
-// 			GROUP BY p.id, upf.publication_id, upf.status, upf.chapter_id, upf.updated_at, c2.number
-// 	`
-// 	publication := &Publication{}
-// 	var chaptersJSON string
-
-// 	err := db.QueryRowContext(ctx, query, userID, id).Scan(
-// 		&publication.ID,
-// 		&publication.Title,
-// 		&publication.Description,
-// 		&publication.Image,
-// 		&publication.IsFollowed,
-// 		&publication.PublicationFollowStatus,
-// 		&publication.LastReadChapterId,
-// 		&publication.LastReadChapterNumber,
-// 		&publication.LastChapterReadAt,
-// 		&chaptersJSON,
-// 	)
-
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	var chapters []Chapter
-// 	if err := json.Unmarshal([]byte(chaptersJSON), &chapters); err != nil {
-// 		return nil, err
-// 	}
-// 	sort.Slice(chapters, func(i, j int) bool {
-// 		return chapters[i].Number > chapters[j].Number
-// 	})
-// 	publication.Chapters = chapters
-
-// 	return publication, nil
-// }
-
-// func (p *Publication) GetAllPublications(ctx context.Context, userID uint) ([]*Publication, error) {
-// 	query := `
-// 		SELECT
-// 		p.id,
-// 		p.title,
-// 		p.description,
-// 		p.image,
-// 		CASE
-// 			WHEN upf.publication_id IS NULL THEN false
-// 			WHEN upf.status = 'deleted' THEN false
-// 			ELSE true
-// 		END AS is_followed,
-// 		upf.status,
-// 		upf.chapter_id AS last_read_chapter_id,
-// 		c2.number AS last_read_chapter_number,
-// 		upf.updated_at AS last_chapter_read_at,
-// 		COALESCE(json_agg(c)) AS chapters
-// 		FROM publications p
-// 		LEFT JOIN user_publication_follows upf ON p.id = upf.publication_id AND upf.user_id = $1
-// 		LEFT JOIN chapters c ON p.id = c.publication_id
-// 		LEFT JOIN chapters c2 ON upf.chapter_id = c2.id
-// 		GROUP BY p.id, upf.publication_id, upf.status, upf.chapter_id, upf.updated_at, c2.number
-// 	`
-
-// 	rows, err := db.QueryContext(ctx, query, userID)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	var publications []*Publication
-// 	for rows.Next() {
-// 		var publication Publication
-// 		var chaptersJSON string
-
-// 		err := rows.Scan(
-// 			&publication.ID,
-// 			&publication.Title,
-// 			&publication.Description,
-// 			&publication.Image,
-// 			&publication.IsFollowed,
-// 			&publication.PublicationFollowStatus,
-// 			&publication.LastReadChapterId,
-// 			&publication.LastReadChapterNumber,
-// 			&publication.LastChapterReadAt,
-// 			&chaptersJSON,
-// 		)
-// 		if err != nil {
-// 			return nil, err
-// 		}
-// 		var chapters []Chapter
-// 		if err := json.Unmarshal([]byte(chaptersJSON), &chapters); err != nil {
-// 			return nil, err
-// 		}
-// 		sort.Slice(chapters, func(i, j int) bool {
-// 			return chapters[i].Number > chapters[j].Number
-// 		})
-// 		publication.Chapters = chapters
-// 		publications = append(publications, &publication)
-// 	}
-
-// 	return publications, nil
-// }
-
-func (p *Publication) GetUserPublicationsHTML(ctx context.Context, userID uint) ([]*Publication, error) {
-	query := `
-			SELECT 
-			p.id, 
-			p.title, 
-			p.description, 
-			p.image, 
-			CASE 
-				WHEN upf.publication_id IS NULL THEN false 
-				WHEN upf.status = 'deleted' THEN false
-				ELSE true 
-			END AS is_followed,
-			upf.status, 
-			upf.chapter_id AS last_chapter_read,
-			c.id AS chapter_id,
-			c.number AS chapter_number
-			ARRAY_AGG(c2.number) AS chapter_numbers
-			FROM publications p
-			LEFT JOIN user_publication_follows upf ON p.id = upf.publication_id AND upf.user_id = $1
-			LEFT JOIN chapters c ON upf.chapter_id = c.id 
-			LEFT JOIN chapters c2 ON p.id = c2.publication_id
-			GROUP BY p.id, upf.publication_id, upf.status, upf.chapter_id, upf.updated_at, c2.number
-		`
-	rows, err := db.QueryContext(ctx, query, userID)
-	if err != nil {
-		return nil, err
-	}
-
-	var publications []*Publication
-	for rows.Next() {
-		publication := &Publication{}
-		err := rows.Scan(
-			&publication.ID,
-			&publication.Title,
-			&publication.Image,
-			&publication.IsFollowed,
-			&publication.PublicationFollowStatus,
-			&publication.LastChapterReadAt,
-			&publication.LastReadChapterId,
-			&publication.LastReadChapterNumber,
-		)
-
-		if err != nil {
-			return nil, err
-		}
-		fmt.Println("aca en el service bro y vos?", publication.PublicationFollowStatus)
-		publications = append(publications, publication)
-	}
-	return publications, nil
 }
 
 func (p *Publication) CreatePublication(ctx context.Context, publication Publication) (*Publication, error) {
