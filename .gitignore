@@ -1,4 +1,10 @@
 .env
 aggregator_api
 node_modules
+tmp
 
+# ignore generated template files
+*_templ.go
+
+# ignore generated css files
+static/css/tailwind.css
