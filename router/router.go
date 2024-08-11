@@ -3,8 +3,8 @@ package router
 import (
 	"net/http"
 
+	"github.com/alanmathiasen/aggregator-api/auth"
 	"github.com/alanmathiasen/aggregator-api/controllers"
-	"github.com/alanmathiasen/aggregator-api/middlewares"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/cors"
@@ -22,7 +22,7 @@ func Routes() http.Handler {
 		AllowCredentials: true,
 		MaxAge:           300,
 	}))
-	router.Use(middlewares.SessionMiddleware)
+	router.Use(auth.SessionMiddleware)
 
 	fs := http.FileServer(http.Dir("static"))
 	router.Handle("/static/*", http.StripPrefix("/static/", fs))
@@ -36,7 +36,7 @@ func Routes() http.Handler {
 	router.Get("/auth/login", controllers.LoginPage)
 	//Loggged in
 	router.Group(func(r chi.Router) {
-		r.Use(middlewares.AuthMiddleware)
+		r.Use(auth.AuthMiddleware)
 
 		r.Get("/discover", controllers.GetAllPublicationsHTML)
 		r.Get("/dashboard", controllers.DashboardHTML)
