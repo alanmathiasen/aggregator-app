@@ -1,4 +1,4 @@
-package helpers
+package utils
 
 import (
 	"encoding/json"
@@ -11,7 +11,7 @@ import (
 	"reflect"
 	"strconv"
 
-	"github.com/alanmathiasen/aggregator-api/services"
+	"github.com/alanmathiasen/aggregator-api/internal/services"
 )
 
 type Envelope map[string]interface{}

@@ -1,17 +1,19 @@
-package controllers
+package handlers
 
 import (
 	"encoding/json"
 	"fmt"
 	"net/http"
 
-	"github.com/alanmathiasen/aggregator-api/auth"
-	"github.com/alanmathiasen/aggregator-api/helpers"
-	"github.com/alanmathiasen/aggregator-api/services"
-	"github.com/alanmathiasen/aggregator-api/view/dashboard"
-	"github.com/alanmathiasen/aggregator-api/view/discover"
+	"github.com/alanmathiasen/aggregator-api/internal/auth"
 
-	pub "github.com/alanmathiasen/aggregator-api/view/publication"
+	"github.com/alanmathiasen/aggregator-api/pkg/utils"
+
+	"github.com/alanmathiasen/aggregator-api/internal/services"
+	"github.com/alanmathiasen/aggregator-api/internal/views/dashboard"
+	"github.com/alanmathiasen/aggregator-api/internal/views/discover"
+
+	pub "github.com/alanmathiasen/aggregator-api/internal/views/publication"
 	"github.com/go-chi/chi"
 	"github.com/gorilla/sessions"
 )
@@ -32,11 +34,11 @@ func GetAllPublications(w http.ResponseWriter, r *http.Request) {
 
 	all, err := publication.GetAllPublications(r.Context(), user.ID)
 	if err != nil {
-		helpers.MessageLogs.ErrorLog.Println(err)
+		utils.MessageLogs.ErrorLog.Println(err)
 		return
 	}
 
-	helpers.WriteJSON(w, http.StatusOK, helpers.Envelope{"publications": all})
+	utils.WriteJSON(w, http.StatusOK, utils.Envelope{"publications": all})
 }
 
 // POST /publications
@@ -44,24 +46,24 @@ func CreatePublication(w http.ResponseWriter, r *http.Request) {
 	var publicationData services.Publication
 	err := json.NewDecoder(r.Body).Decode(&publicationData)
 	if err != nil {
-		helpers.MessageLogs.ErrorLog.Println(err)
+		utils.MessageLogs.ErrorLog.Println(err)
 		return
 	}
 
 	err = publicationData.Validate()
 	if err != nil {
-		helpers.MessageLogs.ErrorLog.Println(err)
-		helpers.ErrorJSON(w, err, http.StatusBadRequest)
+		utils.MessageLogs.ErrorLog.Println(err)
+		utils.ErrorJSON(w, err, http.StatusBadRequest)
 		return
 	}
 
 	publicationCreated, err := publication.CreatePublication(r.Context(), publicationData)
 	if err != nil {
-		helpers.MessageLogs.ErrorLog.Println(err)
+		utils.MessageLogs.ErrorLog.Println(err)
 		return
 	}
 
-	helpers.WriteJSON(w, http.StatusCreated, publicationCreated)
+	utils.WriteJSON(w, http.StatusCreated, publicationCreated)
 }
 
 // PUT /publications/:id
@@ -70,17 +72,17 @@ func UpdatePublication(w http.ResponseWriter, r *http.Request) {
 	var publicationData services.Publication
 	err := json.NewDecoder(r.Body).Decode(&publicationData)
 	if err != nil {
-		helpers.MessageLogs.ErrorLog.Println(err)
+		utils.MessageLogs.ErrorLog.Println(err)
 		return
 	}
 
 	publicationUpdated, err := publication.UpdatePublication(id, publicationData)
 	if err != nil {
-		helpers.MessageLogs.ErrorLog.Println(err)
+		utils.MessageLogs.ErrorLog.Println(err)
 		return
 	}
 
-	helpers.WriteJSON(w, http.StatusOK, publicationUpdated)
+	utils.WriteJSON(w, http.StatusOK, publicationUpdated)
 }
 
 // DELETE /publications/:id
@@ -88,11 +90,11 @@ func DeletePublication(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	err := publication.DeletePublication(id)
 	if err != nil {
-		helpers.MessageLogs.ErrorLog.Println(err)
+		utils.MessageLogs.ErrorLog.Println(err)
 		return
 	}
 
-	helpers.WriteJSON(w, http.StatusOK, helpers.Envelope{"message": "succesfully deleted"})
+	utils.WriteJSON(w, http.StatusOK, utils.Envelope{"message": "succesfully deleted"})
 }
 
 func GetAllPublicationsHTML(w http.ResponseWriter, r *http.Request) {
@@ -102,34 +104,36 @@ func GetAllPublicationsHTML(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/auth/login", http.StatusSeeOther)
 		return
 	}
+
 	all, err := publication.GetAllPublications(r.Context(), user.ID)
 	if err != nil {
-		helpers.MessageLogs.ErrorLog.Println(err)
+		utils.MessageLogs.ErrorLog.Println(err)
 		return
 	}
+
 	component := discover.DiscoverPage(all)
 
 	err = component.Render(r.Context(), w)
 	if err != nil {
-		helpers.MessageLogs.ErrorLog.Println(err)
+		utils.MessageLogs.ErrorLog.Println(err)
 		return
 	}
 }
 
 func UpsertPublicationFollowHTML(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-	publicationIDUint, err := helpers.StringToUint(id)
+	publicationIDUint, err := utils.StringToUint(id)
 	if err != nil {
-		helpers.MessageLogs.ErrorLog.Println(err)
+		utils.MessageLogs.ErrorLog.Println(err)
 		return
 	}
 
 	status := r.FormValue("status")
 
 	chapterID := r.FormValue("chapter_id")
-	chapterIDUint, err := helpers.StringToUint(chapterID)
+	chapterIDUint, err := utils.StringToUint(chapterID)
 	if err != nil {
-		helpers.MessageLogs.ErrorLog.Println(err)
+		utils.MessageLogs.ErrorLog.Println(err)
 		return
 	}
 
@@ -148,29 +152,29 @@ func UpsertPublicationFollowHTML(w http.ResponseWriter, r *http.Request) {
 
 	_, err = userPublicationFollows.UpsertUserPublicationFollows(r.Context(), *publicationFollow)
 	if err != nil {
-		helpers.MessageLogs.ErrorLog.Println(err)
+		utils.MessageLogs.ErrorLog.Println(err)
 		return
 	}
 	p, err := publication.GetPublicationById(r.Context(), id, user.ID)
 
 	if err != nil {
-		helpers.MessageLogs.ErrorLog.Println(err)
+		utils.MessageLogs.ErrorLog.Println(err)
 		return
 
 	}
 	component := pub.DashboardPublication(p)
 	err = component.Render(r.Context(), w)
 	if err != nil {
-		helpers.MessageLogs.ErrorLog.Println(err)
+		utils.MessageLogs.ErrorLog.Println(err)
 		return
 	}
 }
 
 func DeletePublicationFollowHTML(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-	publicationIDUint, err := helpers.StringToUint(id)
+	publicationIDUint, err := utils.StringToUint(id)
 	if err != nil {
-		helpers.MessageLogs.ErrorLog.Println(err)
+		utils.MessageLogs.ErrorLog.Println(err)
 		return
 	}
 
@@ -182,14 +186,14 @@ func DeletePublicationFollowHTML(w http.ResponseWriter, r *http.Request) {
 	}
 	err = userPublicationFollows.DeleteUserPublicationFollow(r.Context(), publicationIDUint, user.ID)
 	if err != nil {
-		helpers.MessageLogs.ErrorLog.Println(err)
+		utils.MessageLogs.ErrorLog.Println(err)
 		return
 	}
 
 	component := pub.Publication(&publication)
 	err = component.Render(r.Context(), w)
 	if err != nil {
-		helpers.MessageLogs.ErrorLog.Println(err)
+		utils.MessageLogs.ErrorLog.Println(err)
 		return
 	}
 }
@@ -205,14 +209,14 @@ func DashboardHTML(w http.ResponseWriter, r *http.Request) {
 	publications, err := publication.GetAllPublications(r.Context(), user.ID)
 	if err != nil {
 		fmt.Println("Error", err)
-		helpers.MessageLogs.ErrorLog.Println(err)
+		utils.MessageLogs.ErrorLog.Println(err)
 		return
 	}
 
 	component := dashboard.Page(publications)
 	err = component.Render(r.Context(), w)
 	if err != nil {
-		helpers.MessageLogs.ErrorLog.Println(err)
+		utils.MessageLogs.ErrorLog.Println(err)
 		return
 	}
 

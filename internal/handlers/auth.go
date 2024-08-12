@@ -1,13 +1,14 @@
-package controllers
+package handlers
 
 import (
 	"fmt"
 	"net/http"
 
-	"github.com/alanmathiasen/aggregator-api/auth"
-	"github.com/alanmathiasen/aggregator-api/helpers"
-	"github.com/alanmathiasen/aggregator-api/services"
-	login "github.com/alanmathiasen/aggregator-api/view/auth"
+	"github.com/alanmathiasen/aggregator-api/internal/auth"
+	"github.com/alanmathiasen/aggregator-api/internal/services"
+	login "github.com/alanmathiasen/aggregator-api/internal/views/auth"
+	"github.com/alanmathiasen/aggregator-api/pkg/utils"
+
 	"github.com/gorilla/sessions"
 )
 
@@ -127,7 +128,7 @@ func RegisterPage(w http.ResponseWriter, r *http.Request) {
 	component := login.Register()
 	err := component.Render(r.Context(), w)
 	if err != nil {
-		helpers.MessageLogs.ErrorLog.Println(err)
+		utils.MessageLogs.ErrorLog.Println(err)
 		return
 	}
 }
@@ -141,14 +142,14 @@ func LoginPage(w http.ResponseWriter, r *http.Request) {
 	}
 	fmt.Println("HOLA")
 	if err := session.Save(r, w); err != nil {
-		helpers.MessageLogs.ErrorLog.Println(err)
+		utils.MessageLogs.ErrorLog.Println(err)
 		return
 	}
 	component := login.Login(errorMessage)
 
 	err := component.Render(r.Context(), w)
 	if err != nil {
-		helpers.MessageLogs.ErrorLog.Println(err)
+		// utils.MessageLogs.ErrorLog.Println(err)
 		return
 	}
 }

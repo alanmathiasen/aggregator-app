@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/alanmathiasen/aggregator-api/services"
+	"github.com/alanmathiasen/aggregator-api/internal/services"
 	"github.com/gorilla/sessions"
 )
 

@@ -1,10 +1,9 @@
 package dashboard 
 
-import "github.com/alanmathiasen/aggregator-api/view/publication"
-
 import (
-	"github.com/alanmathiasen/aggregator-api/view/layout"
-	"github.com/alanmathiasen/aggregator-api/services"
+	"github.com/alanmathiasen/aggregator-api/internal/services"
+	"github.com/alanmathiasen/aggregator-api/internal/views/layout"
+	"github.com/alanmathiasen/aggregator-api/internal/views/publication"
 )
 
 templ Page(publications []*services.Publication) {
