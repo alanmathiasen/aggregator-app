@@ -89,7 +89,10 @@ func disableMarkLastAsReadBtn(p *services.Publication) string {
 	if len(p.Chapters) == 0 {
 		return disabledClass
 	}
-	if p.Chapters[len(p.Chapters)-1].Number == *p.LastReadChapterNumber {
+	if len(p.Chapters) != 0 && p.LastReadChapterNumber == nil {
+		return ""
+	}
+	if len(p.Chapters) == 0 || p.Chapters[len(p.Chapters)-1].Number == *p.LastReadChapterNumber {
 		return disabledClass
 	}
 	return ""
@@ -150,9 +153,6 @@ templ Buttons(p *services.Publication) {
 								</svg>
 							</button>
 						</div>
-						// <p class="mt-2 text-sm text-gray-500 ">
-						// 	Add your teammate to your team and start work to get things done
-						// </p>
 						<form
 							class="mt-5 flex flex-col gap-2"
 							hx-put={ "/publication/" + strconv.Itoa(p.ID) + "/follow" }
@@ -162,22 +162,17 @@ templ Buttons(p *services.Publication) {
 							<label class="form-controll w-full">
 								<div class="label">
 									<span class="label-text">Episode</span>
-									// <span class="label-text-alt">Alt label</span>
 								</div>
 								<select class="select select-bordered w-full " name="chapter_id">
 									<option disabled selected>Select episode</option>
 									for _, c := range p.Chapters {
 										<option value={ strconv.Itoa(c.ID) }>{ "Chapter " + c.Number + ", " + c.Title }</option>
 									}
-									// 
-									// <option>Normal Orange</option>
-									// <option>Normal Tomato</option>
 								</select>
 							</label>
 							<label class="form-controll w-full">
 								<div class="label">
 									<span class="label-text">Status</span>
-									// <span class="label-text-alt">Alt label</span>
 								</div>
 								<select class="select select-bordered w-full" name="status">
 									<option disabled selected>Select status</option>
@@ -190,7 +185,6 @@ templ Buttons(p *services.Publication) {
 							<label class="form-controll w-full">
 								<div class="label">
 									<span class="label-text">Source</span>
-									// <span class="label-text-alt">Alt label</span>
 								</div>
 								<select class="select select-bordered w-full ">
 									<option disabled selected>Select source</option>
@@ -230,9 +224,15 @@ templ DashboardPublication(p *services.Publication) {
 							Last watched: Chapter { *p.LastReadChapterNumber }
 						}
 					</div>
-					<div class="text-xs text-neutral-500 font-semibold">
-						{ p.LastChapterReadAt.Format("02 Jan 2006") }
-					</div>
+					if p.LastChapterReadAt == nil {
+						<div class="text-xs text-neutral-500 font-semibold">
+							No chapters read yet
+						</div>
+					} else {
+						<div class="text-xs text-neutral-500 font-semibold">
+							{ p.LastChapterReadAt.Format("02 Jan 2006") }
+						</div>
+					}
 				</div>
 				<div class="mt-1">
 					<div>
