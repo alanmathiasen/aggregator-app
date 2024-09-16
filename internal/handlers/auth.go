@@ -2,7 +2,9 @@ package handlers
 
 import (
 	"fmt"
+	"log"
 	"net/http"
+	"strings"
 
 	"github.com/alanmathiasen/aggregator-api/internal/auth"
 	"github.com/alanmathiasen/aggregator-api/internal/services"
@@ -11,6 +13,8 @@ import (
 
 	"github.com/gorilla/sessions"
 )
+
+var authService services.AuthService
 
 func Login(w http.ResponseWriter, r *http.Request) {
 	session := r.Context().Value(auth.SessionKey).(*sessions.Session)
@@ -35,7 +39,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := services.AuthenticateUser(r.Context(), email, password)
+	user, err := authService.AuthenticateUser(r.Context(), email, password)
 	if err != nil {
 		fmt.Print(err.Error())
 		session.AddFlash(err.Error())
@@ -77,7 +81,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/auth/register", http.StatusFound)
 		return
 	}
-	hashedPassword, err := services.HashPassword(password)
+	hashedPassword, err := authService.HashPassword(password)
 	if err != nil {
 		session.AddFlash("There was a problem with your registration")
 		err = session.Save(r, w)
@@ -88,7 +92,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/auth/register", http.StatusFound)
 		return
 	}
-	user, err := services.RegisterUser(r.Context(), email, hashedPassword)
+	user, err := authService.RegisterUser(r.Context(), email, hashedPassword)
 	if err != nil {
 		session.AddFlash("This username is already taken")
 		fmt.Print(err.Error())
@@ -125,7 +129,24 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 
 // ****************** PAGES ******************
 func RegisterPage(w http.ResponseWriter, r *http.Request) {
-	component := login.Register()
+	session := r.Context().Value(auth.SessionKey).(*sessions.Session)
+
+	log.Printf("LoginPage - Session ID: %s", session.ID)
+	log.Printf("LoginPage - Flashes: %v", session.Values["flashes"])
+
+	log.Printf("RegisterPage - Session ID: %s", session.ID)
+	log.Printf("RegisterPage - Flashes: %v", session.Values["flashes"])
+
+	// flashes := session.Flashes()
+
+	var errorMessage string
+	for _, f := range session.Flashes() {
+		errorMessage += f.(string)
+	}
+	fmt.Println("errorME", errorMessage)
+	// Explicitly clear flashes
+
+	component := login.Register(errorMessage)
 	err := component.Render(r.Context(), w)
 	if err != nil {
 		utils.MessageLogs.ErrorLog.Println(err)
@@ -135,21 +156,34 @@ func RegisterPage(w http.ResponseWriter, r *http.Request) {
 
 func LoginPage(w http.ResponseWriter, r *http.Request) {
 	session := r.Context().Value(auth.SessionKey).(*sessions.Session)
+
+	log.Printf("LoginPage - Session ID: %s", session.ID)
+	log.Printf("LoginPage - Flashes before: %v", session.Values["flashes"])
+
 	flashes := session.Flashes()
-	var errorMessage string
+	log.Printf("LoginPage - Retrieved flashes: %v", flashes)
+
+	var errorMessages []string
 	for _, f := range flashes {
-		errorMessage += f.(string)
+		errorMessages = append(errorMessages, f.(string))
 	}
-	fmt.Println("HOLA")
+
+	log.Printf("LoginPage - Error messages: %v", errorMessages)
+
+	// Save the session to persist the flash clearance
 	if err := session.Save(r, w); err != nil {
-		utils.MessageLogs.ErrorLog.Println(err)
+		log.Printf("LoginPage - Error saving session: %v", err)
+		http.Error(w, "Error saving session", http.StatusInternalServerError)
 		return
 	}
-	component := login.Login(errorMessage)
 
+	log.Printf("LoginPage - Flashes after save: %v", session.Values["flashes"])
+
+	component := login.Login(strings.Join(errorMessages, " "))
 	err := component.Render(r.Context(), w)
 	if err != nil {
-		// utils.MessageLogs.ErrorLog.Println(err)
+		log.Printf("LoginPage - Error rendering component: %v", err)
+		http.Error(w, "Error rendering component", http.StatusInternalServerError)
 		return
 	}
 }

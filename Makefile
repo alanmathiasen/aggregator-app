@@ -45,7 +45,6 @@ build: generate
 
 run: build
 	./tmp/${BINARY}
-# @echo "api started..."
 
 stop:
 	@echo "stopping server.."

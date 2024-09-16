@@ -69,6 +69,7 @@ func main() {
 
 func (app *Application) RegisterRoutes() http.Handler {
 	router := chi.NewRouter()
+
 	router.Use(middleware.Recoverer)
 
 	router.Use(cors.Handler(cors.Options{
@@ -79,6 +80,7 @@ func (app *Application) RegisterRoutes() http.Handler {
 		AllowCredentials: true,
 		MaxAge:           300,
 	}))
+
 	router.Use(auth.SessionMiddleware)
 
 	fs := http.FileServer(http.Dir("static"))
@@ -88,10 +90,10 @@ func (app *Application) RegisterRoutes() http.Handler {
 	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/dashboard", http.StatusMovedPermanently)
 	})
-	//Auth
+	// Auth
 	router.Get("/auth/register", handlers.RegisterPage)
 	router.Get("/auth/login", handlers.LoginPage)
-	//Loggged in
+	// Loggged in
 	router.Group(func(r chi.Router) {
 		r.Use(auth.AuthMiddleware)
 
@@ -108,7 +110,7 @@ func (app *Application) RegisterRoutes() http.Handler {
 	// router.Get("/api/v1/publications/{id}", handlers.GetPublicationById)
 	router.Post("/api/v1/publications", handlers.CreatePublication)
 	router.Put("/api/v1/publications/{id}", handlers.UpdatePublication)
-	//router.Delete("/api/v1/publications/{id}", handlers.DeletePublication)
+	// router.Delete("/api/v1/publications/{id}", handlers.DeletePublication)
 	// Chapters
 	router.Get("/api/v1/publications/{id}/chapters", handlers.GetAllChaptersByPublicationID)
 	router.Post("/api/v1/publications/{id}/chapters", handlers.CreateChapterForPublication)
@@ -119,5 +121,4 @@ func (app *Application) RegisterRoutes() http.Handler {
 	router.Post("/auth/logout", handlers.Logout)
 
 	return router
-
 }

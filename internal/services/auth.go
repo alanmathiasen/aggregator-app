@@ -9,20 +9,22 @@ import (
 
 var user User
 
-func AuthenticateUser(ctx context.Context, email string, password string) (*User, error) {
+type AuthService struct{}
+
+func (a *AuthService) AuthenticateUser(ctx context.Context, email string, password string) (*User, error) {
 	userData, err := user.GetUserByEmail(ctx, email)
 	if err != nil {
 		return nil, errors.New("incorrect email")
 	}
 
-	if !ComparePassword(userData.HashedPassword, password) {
+	if !a.ComparePassword(userData.HashedPassword, password) {
 		return nil, errors.New("incorrect password")
 	}
 
 	return userData, nil
 }
 
-func RegisterUser(ctx context.Context, email string, hashedPassword string) (*User, error) {
+func (a *AuthService) RegisterUser(ctx context.Context, email string, hashedPassword string) (*User, error) {
 	newUser, err := user.CreateUser(ctx, email, hashedPassword)
 	if err != nil {
 		return nil, err
@@ -30,12 +32,12 @@ func RegisterUser(ctx context.Context, email string, hashedPassword string) (*Us
 	return newUser, nil
 }
 
-func HashPassword(password string) (string, error) {
+func (a *AuthService) HashPassword(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	return string(bytes), err
 }
 
-func ComparePassword(hashedPassword string, password string) bool {
+func (a *AuthService) ComparePassword(hashedPassword string, password string) bool {
 	hashedPasswordBytes := []byte(hashedPassword)
 	passwordBytes := []byte(password)
 	return bcrypt.CompareHashAndPassword(hashedPasswordBytes, passwordBytes) == nil
