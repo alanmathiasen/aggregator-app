@@ -1,47 +1,41 @@
 package layout
 
 templ Navbar() {
-  <header class="navbar max-w-screen-xl mx-auto">
-  
-    
-    <div class="flex-1">
-      <a class="btn btn-ghost text-xl">TrackingAPP</a>
-    </div>
-    <div class="flex-none">
-      <div class="menu menu-horizontal">
-        <ul class="menu menu-horizontal px-1">
-          <li><a href="/dashboard">Dashboard</a></li>
-          <li><a href="/discover">Discovery</a></li>
-        </ul>
-      </div>
-       
-      <div class="dropdown dropdown-end">
-        <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
-          <div class="w-10 rounded-full">
-            <img alt="Tailwind CSS Navbar component" src="/static/images/default.png" />
-          </div>
-        </div>
-        <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 rounded-box w-52 bg-info">
-          <li>
-            <a class="justify-between">
-              Profile
-              <span class="badge">New</span>
-            </a>
-          </li>
-          <li><a>Settings</a></li>
-          <form action="/auth/logout" method="POST">
-            <li>
-              <button type="submit">Logout</button>
-            </li>
-          </form>
-        </ul>
-      </div>
-    </div>
-    
-  </header>
-  
+	<header class="navbar max-w-screen-xl mx-auto">
+		<div class="flex-1">
+			<a class="btn btn-ghost text-xl">TrackingAPP</a>
+		</div>
+		<div class="flex-none">
+			<div class="menu menu-horizontal">
+				<ul class="menu menu-horizontal px-1">
+					<li><a href="/dashboard">Dashboard</a></li>
+					<li><a href="/discover">Discovery</a></li>
+				</ul>
+			</div>
+			<div class="dropdown dropdown-end">
+				<div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
+					<div class="w-10 rounded-full">
+						<img alt="Tailwind CSS Navbar component" src="/static/images/default.png"/>
+					</div>
+				</div>
+				<ul tabindex="0" class="menu menu-lg dropdown-content mt-3 z-[1] p-2 rounded-box w-52 bg-base-100 shadow">
+					<li>
+						<a class="justify-between">
+							Profile
+							<span class="badge">New</span>
+						</a>
+					</li>
+					<li><a>Settings</a></li>
+					<form action="/auth/logout" method="POST">
+						<li>
+							<button type="submit">Logout</button>
+						</li>
+					</form>
+				</ul>
+			</div>
+		</div>
+	</header>
 }
-
 
 //  <a class="flex items-center gap-2 text-lg font-semibold sm:text-base mr-4" href="#" rel="ugc">
 //       <svg
@@ -72,12 +66,12 @@ templ Navbar() {
 //         Settings
 //       </a>
 //     </nav>
-//     <div 
+//     <div
 //       class="relative flex items-center w-full gap-2 md:ml-auto md:gap-2 lg:gap-4"
-//       x-data="{ open: false }" 
-//       @click="open=!open" 
+//       x-data="{ open: false }"
+//       @click="open=!open"
 //     >
-//         <button 
+//         <button
 //             class="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-10 w-10 rounded-full ml-auto"
 //         >
 //             <img
@@ -90,10 +84,10 @@ templ Navbar() {
 //             />
 //             <span class="sr-only">Toggle user menu</span>
 //         </button>
-//         <ul 
-//             x-show="open" 
+//         <ul
+//             x-show="open"
 //             @click.away="open = false"
-//             class="absolute top-10 right-0 w-48 py-1 bg-white border rounded shadow-xl"  
+//             class="absolute top-10 right-0 w-48 py-1 bg-white border rounded shadow-xl"
 //         >
 //             <li>
 //               <form action="/auth/logout" method="POST">
