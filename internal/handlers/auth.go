@@ -41,7 +41,6 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	user, err := authService.AuthenticateUser(r.Context(), email, password)
 	if err != nil {
-		fmt.Print(err.Error())
 		session.AddFlash(err.Error())
 		err = session.Save(r, w)
 		if err != nil {
@@ -58,6 +57,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
 	http.Redirect(w, r, "/dashboard", http.StatusFound)
 }
 
@@ -131,20 +131,14 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 func RegisterPage(w http.ResponseWriter, r *http.Request) {
 	session := r.Context().Value(auth.SessionKey).(*sessions.Session)
 
-	log.Printf("LoginPage - Session ID: %s", session.ID)
-	log.Printf("LoginPage - Flashes: %v", session.Values["flashes"])
-
-	log.Printf("RegisterPage - Session ID: %s", session.ID)
-	log.Printf("RegisterPage - Flashes: %v", session.Values["flashes"])
-
-	// flashes := session.Flashes()
-
 	var errorMessage string
 	for _, f := range session.Flashes() {
 		errorMessage += f.(string)
 	}
-	fmt.Println("errorME", errorMessage)
-	// Explicitly clear flashes
+
+	if err := session.Save(r, w); err != nil {
+		log.Printf("Error saving session: %v", err)
+	}
 
 	component := login.Register(errorMessage)
 	err := component.Render(r.Context(), w)
@@ -157,18 +151,12 @@ func RegisterPage(w http.ResponseWriter, r *http.Request) {
 func LoginPage(w http.ResponseWriter, r *http.Request) {
 	session := r.Context().Value(auth.SessionKey).(*sessions.Session)
 
-	log.Printf("LoginPage - Session ID: %s", session.ID)
-	log.Printf("LoginPage - Flashes before: %v", session.Values["flashes"])
-
 	flashes := session.Flashes()
-	log.Printf("LoginPage - Retrieved flashes: %v", flashes)
 
 	var errorMessages []string
 	for _, f := range flashes {
 		errorMessages = append(errorMessages, f.(string))
 	}
-
-	log.Printf("LoginPage - Error messages: %v", errorMessages)
 
 	// Save the session to persist the flash clearance
 	if err := session.Save(r, w); err != nil {
@@ -176,8 +164,6 @@ func LoginPage(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error saving session", http.StatusInternalServerError)
 		return
 	}
-
-	log.Printf("LoginPage - Flashes after save: %v", session.Values["flashes"])
 
 	component := login.Login(strings.Join(errorMessages, " "))
 	err := component.Render(r.Context(), w)
