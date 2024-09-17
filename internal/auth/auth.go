@@ -3,7 +3,6 @@ package auth
 import (
 	"context"
 	"encoding/gob"
-	"fmt"
 	"log"
 	"net/http"
 
@@ -36,24 +35,15 @@ func SessionMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		log.Printf("SessionMiddleware - Session ID: %s", session.ID)
-		log.Printf("SessionMiddleware - Flashes before: %v", session.Values["flashes"])
-
 		ctx := context.WithValue(r.Context(), SessionKey, session)
+
 		next.ServeHTTP(w, r.WithContext(ctx))
-
-		log.Printf("SessionMiddleware - Flashes after: %v", session.Values["flashes"])
-
-		if err := session.Save(r, w); err != nil {
-			log.Printf("Error saving session: %v", err)
-		}
 	})
 }
 
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		session := r.Context().Value(SessionKey).(*sessions.Session)
-		fmt.Println("session", session)
 		if auth, ok := session.Values["authenticated"].(bool); !ok || !auth {
 			http.Redirect(w, r, "/auth/login", http.StatusSeeOther)
 			return
