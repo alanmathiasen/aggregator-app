@@ -5,10 +5,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/alanmathiasen/aggregator-api/internal/auth"
-
 	"github.com/alanmathiasen/aggregator-api/pkg/utils"
 
+	"github.com/alanmathiasen/aggregator-api/internal/auth"
 	"github.com/alanmathiasen/aggregator-api/internal/services"
 	"github.com/alanmathiasen/aggregator-api/internal/views/dashboard"
 	"github.com/alanmathiasen/aggregator-api/internal/views/discover"
@@ -26,13 +25,13 @@ var (
 // GET /publications
 func GetAllPublications(w http.ResponseWriter, r *http.Request) {
 	session := r.Context().Value(auth.SessionKey).(*sessions.Session)
-	user, ok := session.Values["user"].(*services.User)
-	if user == nil || !ok {
+	userID, ok := session.Values["userID"].(uint)
+	if !ok {
 		http.Redirect(w, r, "/auth/login", http.StatusSeeOther)
 		return
 	}
 
-	all, err := publication.GetAllPublications(r.Context(), user.ID)
+	all, err := publication.GetAllPublications(r.Context(), userID)
 	if err != nil {
 		utils.MessageLogs.ErrorLog.Println(err)
 		return
@@ -99,13 +98,13 @@ func DeletePublication(w http.ResponseWriter, r *http.Request) {
 
 func GetAllPublicationsHTML(w http.ResponseWriter, r *http.Request) {
 	session := r.Context().Value(auth.SessionKey).(*sessions.Session)
-	user, ok := session.Values["user"].(*services.User)
-	if user == nil || !ok {
+	userID, ok := session.Values["userID"].(uint)
+	if userID == 0 || !ok {
 		http.Redirect(w, r, "/auth/login", http.StatusSeeOther)
 		return
 	}
 
-	all, err := publication.GetAllPublications(r.Context(), user.ID)
+	all, err := publication.GetAllPublications(r.Context(), userID)
 	if err != nil {
 		utils.MessageLogs.ErrorLog.Println(err)
 		return
@@ -138,8 +137,8 @@ func UpsertPublicationFollowHTML(w http.ResponseWriter, r *http.Request) {
 	}
 
 	session := r.Context().Value(auth.SessionKey).(*sessions.Session)
-	user, ok := session.Values["user"].(*services.User)
-	if user == nil || !ok {
+	userID, ok := session.Values["userID"].(uint)
+	if !ok {
 		http.Redirect(w, r, "/auth/login", http.StatusSeeOther)
 		return
 	}
@@ -147,7 +146,7 @@ func UpsertPublicationFollowHTML(w http.ResponseWriter, r *http.Request) {
 		PublicationID: publicationIDUint,
 		ChapterID:     chapterIDUint,
 		Status:        status,
-		UserID:        user.ID,
+		UserID:        userID,
 	}
 
 	_, err = userPublicationFollows.UpsertUserPublicationFollows(r.Context(), *publicationFollow)
@@ -155,8 +154,7 @@ func UpsertPublicationFollowHTML(w http.ResponseWriter, r *http.Request) {
 		utils.MessageLogs.ErrorLog.Println(err)
 		return
 	}
-	p, err := publication.GetPublicationById(r.Context(), id, user.ID)
-
+	p, err := publication.GetPublicationById(r.Context(), id, userID)
 	if err != nil {
 		utils.MessageLogs.ErrorLog.Println(err)
 		return
@@ -179,12 +177,13 @@ func DeletePublicationFollowHTML(w http.ResponseWriter, r *http.Request) {
 	}
 
 	session := r.Context().Value(auth.SessionKey).(*sessions.Session)
-	user, ok := session.Values["user"].(*services.User)
-	if user == nil || !ok {
+	userID, ok := session.Values["userID"].(uint)
+	if !ok {
 		http.Redirect(w, r, "/auth/login", http.StatusSeeOther)
 		return
 	}
-	err = userPublicationFollows.DeleteUserPublicationFollow(r.Context(), publicationIDUint, user.ID)
+
+	err = userPublicationFollows.DeleteUserPublicationFollow(r.Context(), publicationIDUint, userID)
 	if err != nil {
 		utils.MessageLogs.ErrorLog.Println(err)
 		return
@@ -200,13 +199,13 @@ func DeletePublicationFollowHTML(w http.ResponseWriter, r *http.Request) {
 
 func DashboardHTML(w http.ResponseWriter, r *http.Request) {
 	session := r.Context().Value(auth.SessionKey).(*sessions.Session)
-	user, ok := session.Values["user"].(*services.User)
-	if user == nil || !ok {
+	userID, ok := session.Values["userID"].(uint)
+	if userID == 0 || !ok {
 		http.Redirect(w, r, "/auth/login", http.StatusSeeOther)
 		return
 	}
 
-	publications, err := publication.GetAllPublications(r.Context(), user.ID)
+	publications, err := publication.GetAllPublications(r.Context(), userID)
 	if err != nil {
 		fmt.Println("Error", err)
 		utils.MessageLogs.ErrorLog.Println(err)
@@ -219,5 +218,4 @@ func DashboardHTML(w http.ResponseWriter, r *http.Request) {
 		utils.MessageLogs.ErrorLog.Println(err)
 		return
 	}
-
 }

@@ -51,7 +51,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	session.Values["authenticated"] = true
-	session.Values["user"] = user
+	session.Values["userID"] = user.ID
 	err = session.Save(r, w)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -107,7 +107,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	session.Values["authenticated"] = true
-	session.Values["user"] = user
+	session.Values["userID"] = user.ID
 	err = session.Save(r, w)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
