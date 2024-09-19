@@ -1,2 +1,0 @@
-ALTER TABLE chapters
-DROP COLUMN number VARCHAR;

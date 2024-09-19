@@ -15,13 +15,13 @@ create_container:
 	docker run --name ${DB_DOCKER_CONTAINER_NAME} -p 5432:5432 -e POSTGRES_USER=${USER} -e POSTGRES_PASSWORD=${PASSWORD} -d postgres:12-alpine
 
 create_db:
-	docker exec -it ${DB_DOCKER_CONTAINER_NAME} createdb --username=${DB_USER} --owner=${DB_USER} ${DB_NAME}
+	docker exec -it ${DB_DOCKER_CONTAINER_NAME} createdb --username=${USER} --owner=${USER} ${DB_NAME}
 
 start_container:
 	docker start ${DB_DOCKER_CONTAINER_NAME}
 
 create_migrations:
-	${MIGRATE} create -ext sql -dir migrations/ -seq create_users
+	${MIGRATE} create -ext sql -dir migrations/ -seq init_db
 
 migrate_up:
 	${MIGRATE} up
