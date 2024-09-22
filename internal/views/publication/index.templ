@@ -58,46 +58,45 @@ templ Publication(publication *services.Publication) {
 					hx-target={ "#publication-" + strconv.Itoa(publication.ID) }
 					class="btn btn-primary p-0 h-6 w-6 hover:bg-accent"
 				>
-					if publication.IsFollowed {
-						Follow
-					} else {
-						Stop following
-					}
+					// if publication.IsFollowed {
+					// 	Follow
+					// } else {
+					// 	Stop following
+					// }
 				</button>
 			</div>
 		</div>
 	</div>
 }
 
-func lastChapterID(p *services.Publication) string {
-	// for _, c := range p.Chapters {
-	// 	json, err := json.MarshalIndent(c, "", "\t")
-	// 	if err != nil {
-	// 		return ""
-	// 	}
-	// 	fmt.Println(string(json))
-	// }
-	if len(p.Chapters) == 0 {
-		return ""
-	}
-	lastChapterID := strconv.Itoa(p.Chapters[len(p.Chapters)-1].ID)
-	return lastChapterID
-}
+// func lastChapterID(p *services.Publication) string {
+// 	// for _, c := range p.Chapters {
+// 	// 	json, err := json.MarshalIndent(c, "", "\t")
+// 	// 	if err != nil {
+// 	// 		return ""
+// 	// 	}
+// 	// 	fmt.Println(string(json))
+// 	// }
+// 	if len(p.Chapters) == 0 {
+// 		return ""
+// 	}
+// 	lastChapterID := strconv.Itoa(p.Chapters[len(p.Chapters)-1].ID)
+// 	return lastChapterID
+// }
 
-func disableMarkLastAsReadBtn(p *services.Publication) string {
-	disabledClass := "btn-disabled"
-	if len(p.Chapters) == 0 {
-		return disabledClass
-	}
-	if len(p.Chapters) != 0 && p.LastReadChapterNumber == nil {
-		return ""
-	}
-	if len(p.Chapters) == 0 || p.Chapters[len(p.Chapters)-1].Number == *p.LastReadChapterNumber {
-		return disabledClass
-	}
-	return ""
-}
-
+// func disableMarkLastAsReadBtn(p *services.Publication) string {
+// 	disabledClass := "btn-disabled"
+// 	if len(p.Chapters) == 0 {
+// 		return disabledClass
+// 	}
+// 	if len(p.Chapters) != 0 && p.LastReadChapterNumber == nil {
+// 		return ""
+// 	}
+// 	if len(p.Chapters) == 0 || p.Chapters[len(p.Chapters)-1].Number == *p.LastReadChapterNumber {
+// 		return disabledClass
+// 	}
+// 	return ""
+// }
 templ Buttons(p *services.Publication) {
 	<div class="join">
 		<div class="tooltip" data-tip="Mark last chapter as seen.">
@@ -107,10 +106,11 @@ templ Buttons(p *services.Publication) {
 				hx-swap="outerHTML"
 			>
 				<input type="hidden" name="status" value={ STATUS_READING }/>
-				<input type="hidden" name="chapter_id" value={ lastChapterID(p) }/>
+				// <input type="hidden" name="chapter_id" value={ lastChapterID(p) }/>
+				// + disableMarkLastAsReadBtn(p) } vvv
 				<button
 					type="submit"
-					class={ "btn join-item p-2 " + disableMarkLastAsReadBtn(p) }
+					class={ "btn join-item p-2 " }
 				>
 					@shared.CheckIcon("h-32", "w-32", "stroke-base-100", "fill-base-100")
 				</button>
@@ -163,12 +163,12 @@ templ Buttons(p *services.Publication) {
 								<div class="label">
 									<span class="label-text">Episode</span>
 								</div>
-								<select class="select select-bordered w-full " name="chapter_id">
-									<option disabled selected>Select episode</option>
-									for _, c := range p.Chapters {
-										<option value={ strconv.Itoa(c.ID) }>{ "Chapter " + c.Number + ", " + c.Title }</option>
-									}
-								</select>
+								// <select class="select select-bordered w-full " name="chapter_id">
+								// 	<option disabled selected>Select episode</option>
+								// 	for _, c := range p.Chapters {
+								// 		<option value={ strconv.Itoa(c.ID) }>{ "Chapter " + c.Number + ", " + c.Title }</option>
+								// 	}
+								// </select>
 							</label>
 							<label class="form-controll w-full">
 								<div class="label">
@@ -211,36 +211,38 @@ templ DashboardPublication(p *services.Publication) {
 		id={ "publication-" + strconv.Itoa(p.ID) }
 	>
 		<div class="flex-none ">
-			<img class=" max-w-32 h-full object-cover" src={ p.Image } alt="Movie"/>
+			// <img class=" max-w-32 h-full object-cover" src={ p.Image } alt="Movie"/>
 		</div>
 		<div class="flex-grow mx-3 my-1 flex flex-col justify-between">
 			<div>
 				<h2 class="card-title mb-1 text-lg">{ p.Title }</h2>
 				<div class="mt-1">
 					<div>
-						if p.LastReadChapterNumber == nil {
-							No chapters read yet
-						} else {
-							Last watched: Chapter { *p.LastReadChapterNumber }
-						}
+						aca irian los chapters bre
+						// if p.LastReadChapterNumber == nil {
+						// 	No chapters read yet
+						// } else {
+						// 	Last watched: Chapter { *p.LastReadChapterNumber }
+						// }
 					</div>
-					if p.LastChapterReadAt == nil {
-						<div class="text-xs text-neutral-500 font-semibold">
-							No chapters read yet
-						</div>
-					} else {
-						<div class="text-xs text-neutral-500 font-semibold">
-							{ p.LastChapterReadAt.Format("02 Jan 2006") }
-						</div>
-					}
+					// if p.LastChapterReadAt == nil {
+					// 	<div class="text-xs text-neutral-500 font-semibold">
+					// 		No chapters read yet
+					// 	</div>
+					// } else {
+					// 	<div class="text-xs text-neutral-500 font-semibold">
+					// 		{ p.LastChapterReadAt.Format("02 Jan 2006") }
+					// 	</div>
+					// }
 				</div>
 				<div class="mt-1">
 					<div>
-						if len(p.Chapters) == 0 {
-							No chapters available
-						} else {
-							Last released: Chapter { p.Chapters[len(p.Chapters)-1].Number }
-						}
+						// if len(p.Chapters) == 0 {
+						// 	No chapters available
+						// } else {
+						Last released: 
+						// Chapter { p.Chapters[len(p.Chapters)-1].Number }
+						// }
 					</div>
 					<div class="text-xs text-neutral-500 font-semibold">
 						{ time.Now().Format("02 Jan 2006") }

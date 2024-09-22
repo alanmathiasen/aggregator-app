@@ -1,0 +1,11 @@
+package publication
+
+import "github.com/alanmathiasen/aggregator-api/internal/services"
+
+templ Page(publication *services.Publication) {
+	<div>
+		<h1>{ publication.Title }</h1>
+		<p>{ publication.Sinopsis }</p>
+		<p>{ publication.ReleaseDate.Time.Format("2006-01-02") }</p>
+	</div>
+}

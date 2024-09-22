@@ -1,5 +1,5 @@
 CREATE TABLE "publications" (
-  "id" bigint PRIMARY KEY,
+  "id" bigserial PRIMARY KEY,
   "title" varchar,
   "sinopsis" text,
   "finished" bool,
@@ -12,13 +12,13 @@ CREATE TABLE "publications" (
 );
 
 CREATE TABLE "publication_types" (
-  "id" bigint PRIMARY KEY,
+  "id" bigserial PRIMARY KEY,
   "name" varchar,
   "created_at" timestamp
 );
 
 CREATE TABLE "publication_reviews" (
-  "id" bigint PRIMARY KEY,
+  "id" bigserial PRIMARY KEY,
   "user_id" bigint,
   "publication_id" bigint,
   "rating" float,
@@ -28,7 +28,7 @@ CREATE TABLE "publication_reviews" (
 );
 
 CREATE TABLE "review_likes" (
-  "id" bigint PRIMARY KEY,
+  "id" bigserial PRIMARY KEY,
   "review_id" bigint,
   "user_id" bigint,
   "is_like" bool,
@@ -37,7 +37,7 @@ CREATE TABLE "review_likes" (
 );
 
 CREATE TABLE "users" (
-  "id" bigint PRIMARY KEY,
+  "id" bigserial PRIMARY KEY,
   "username" varchar,
   "role" varchar,
   "email" varchar,
@@ -47,7 +47,7 @@ CREATE TABLE "users" (
 );
 
 CREATE TABLE "chapters" (
-  "id" bigint PRIMARY KEY,
+  "id" bigserial PRIMARY KEY,
   "publication_id" bigint,
   "title" varchar,
   "number" varchar,
@@ -57,7 +57,7 @@ CREATE TABLE "chapters" (
 );
 
 CREATE TABLE "chapter_likes" (
-  "id" bigint PRIMARY KEY,
+  "id" bigserial PRIMARY KEY,
   "chapter_id" bigint,
   "user_id" bigint,
   "is_like" bool,
@@ -66,7 +66,7 @@ CREATE TABLE "chapter_likes" (
 );
 
 CREATE TABLE "chapter_comments" (
-  "id" bigint PRIMARY KEY,
+  "id" bigserial PRIMARY KEY,
   "chapter_id" bigint,
   "user_id" bigint,
   "text" text,
@@ -76,7 +76,7 @@ CREATE TABLE "chapter_comments" (
 );
 
 CREATE TABLE "chapter_comment_likes" (
-  "id" bigint PRIMARY KEY,
+  "id" bigserial PRIMARY KEY,
   "comment_id" bigint,
   "user_id" bigint,
   "is_like" bool,
@@ -85,7 +85,7 @@ CREATE TABLE "chapter_comment_likes" (
 );
 
 CREATE TABLE "user_bookmarks" (
-  "id" bigint PRIMARY KEY,
+  "id" bigserial PRIMARY KEY,
   "user_id" bigint,
   "publication_id" bigint,
   "last_chapter_interacted_id" bigint,
@@ -96,13 +96,13 @@ CREATE TABLE "user_bookmarks" (
 );
 
 CREATE TABLE "user_bookmark_status" (
-  "id" bigint PRIMARY KEY,
+  "id" bigserial PRIMARY KEY,
   "name" varchar,
   "created_at" timestamp
 );
 
 CREATE TABLE "suggestions" (
-  "id" bigint PRIMARY KEY,
+  "id" bigserial PRIMARY KEY,
   "publication_1_id" bigint,
   "publication_2_id" bigint,
   "similarity_score" float,
@@ -111,7 +111,7 @@ CREATE TABLE "suggestions" (
 );
 
 CREATE TABLE "chapter_reviews" (
-  "id" bigint PRIMARY KEY,
+  "id" bigserial PRIMARY KEY,
   "user_id" bigint,
   "chapter_id" bigint,
   "rating" float,
@@ -121,7 +121,7 @@ CREATE TABLE "chapter_reviews" (
 );
 
 CREATE TABLE "chapter_review_likes" (
-  "id" bigint PRIMARY KEY,
+  "id" bigserial PRIMARY KEY,
   "review_id" bigint,
   "user_id" bigint,
   "is_like" bool,

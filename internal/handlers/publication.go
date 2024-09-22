@@ -23,22 +23,22 @@ var (
 )
 
 // GET /publications
-func GetAllPublications(w http.ResponseWriter, r *http.Request) {
-	session := r.Context().Value(auth.SessionKey).(*sessions.Session)
-	userID, ok := session.Values["userID"].(uint)
-	if !ok {
-		http.Redirect(w, r, "/auth/login", http.StatusSeeOther)
-		return
-	}
+// func GetAllPublications(w http.ResponseWriter, r *http.Request) {
+// 	session := r.Context().Value(auth.SessionKey).(*sessions.Session)
+// 	userID, ok := session.Values["userID"].(uint)
+// 	if !ok {
+// 		http.Redirect(w, r, "/auth/login", http.StatusSeeOther)
+// 		return
+// 	}
 
-	all, err := publication.GetAllPublications(r.Context(), userID)
-	if err != nil {
-		utils.MessageLogs.ErrorLog.Println(err)
-		return
-	}
+// 	all, err := publication.GetAllPublications(r.Context(), userID)
+// 	if err != nil {
+// 		utils.MessageLogs.ErrorLog.Println(err)
+// 		return
+// 	}
 
-	utils.WriteJSON(w, http.StatusOK, utils.Envelope{"publications": all})
-}
+// 	utils.WriteJSON(w, http.StatusOK, utils.Envelope{"publications": all})
+// }
 
 // POST /publications
 func CreatePublication(w http.ResponseWriter, r *http.Request) {
@@ -104,7 +104,7 @@ func GetAllPublicationsHTML(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	all, err := publication.GetAllPublications(r.Context(), userID)
+	all, err := publication.GetAllPublications(r.Context(), services.GetAllPublicationsOptions{}) //, userID)
 	if err != nil {
 		utils.MessageLogs.ErrorLog.Println(err)
 		return
@@ -205,7 +205,7 @@ func DashboardHTML(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	publications, err := publication.GetAllPublications(r.Context(), userID)
+	publications, err := publication.GetAllPublications(r.Context(), services.GetAllPublicationsOptions{}) //, userID)
 	if err != nil {
 		fmt.Println("Error", err)
 		utils.MessageLogs.ErrorLog.Println(err)
@@ -213,6 +213,31 @@ func DashboardHTML(w http.ResponseWriter, r *http.Request) {
 	}
 
 	component := dashboard.Page(publications)
+	err = component.Render(r.Context(), w)
+	if err != nil {
+		utils.MessageLogs.ErrorLog.Println(err)
+		return
+	}
+}
+
+func GetPublicationHTML(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("GetPublicationHTML")
+	id := chi.URLParam(r, "id")
+
+	session := r.Context().Value(auth.SessionKey).(*sessions.Session)
+	userID, ok := session.Values["userID"].(uint)
+	if !ok {
+		http.Redirect(w, r, "/auth/login", http.StatusSeeOther)
+		return
+	}
+
+	p, err := publication.GetPublicationById(r.Context(), id, userID)
+	if err != nil {
+		utils.MessageLogs.ErrorLog.Println(err)
+		return
+	}
+
+	component := pub.Page(p)
 	err = component.Render(r.Context(), w)
 	if err != nil {
 		utils.MessageLogs.ErrorLog.Println(err)

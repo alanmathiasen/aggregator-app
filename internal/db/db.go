@@ -27,7 +27,6 @@ func ConnectPostgres(dsn string) (*DB, error) {
 	d, err := sql.Open("pgx", dsn)
 	if err != nil {
 		fmt.Println(err)
-		return nil, err
 	}
 
 	d.SetMaxOpenConns(maxOpenDbConn)

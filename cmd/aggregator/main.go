@@ -99,6 +99,7 @@ func (app *Application) RegisterRoutes() http.Handler {
 
 		r.Get("/discover", handlers.GetAllPublicationsHTML)
 		r.Get("/dashboard", handlers.DashboardHTML)
+		r.Get("/publication/{id}", handlers.GetPublicationHTML)
 		r.Put("/publication/{id}/follow", handlers.UpsertPublicationFollowHTML)
 		r.Delete("/publication/{id}/follow", handlers.DeletePublicationFollowHTML)
 	})
@@ -106,7 +107,7 @@ func (app *Application) RegisterRoutes() http.Handler {
 
 	//--------------------------REST API--------------------------
 	// Publications
-	router.Get("/api/v1/publications", handlers.GetAllPublications)
+	// router.Get("/api/v1/publications", handlers.GetAllPublications)
 	// router.Get("/api/v1/publications/{id}", handlers.GetPublicationById)
 	router.Post("/api/v1/publications", handlers.CreatePublication)
 	router.Put("/api/v1/publications/{id}", handlers.UpdatePublication)
