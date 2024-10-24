@@ -6,7 +6,7 @@ import (
 	"github.com/alanmathiasen/aggregator-api/internal/views/publication"
 )
 
-templ Page(publications []*services.Publication) {
+templ Page(publications []*services.PublicationWithBookmark) {
 	@layout.Base() {
 		<div class=" max-w-6xl w-full mx-auto">
 			<div class="text-sm breadcrumbs">

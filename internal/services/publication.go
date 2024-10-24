@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"sort"
 	"time"
 
@@ -18,28 +19,33 @@ type Source struct {
 }
 
 type Publication struct {
-	ID                    int         `json:"id"`
-	Title                 string      `json:"title"`
-	Sinopsis              string      `json:"description"`
-	Finished              bool        `json:"finished"`
-	ReleaseDate           pgtype.Date `json:"firstAired"`
-	TypeID                int64
-	AuthorID              int64
-	StudioID              int64
-	CreatedAt             time.Time  `json:"created_at"`
-	UpdatedAt             time.Time  `json:"updated_at"`
-	Status                *string    `json:"status"`
-	LastReadChapterId     *int       `json:"chapter_id"`
-	LastReadChapterNumber *string    `json:"last_read_chapter_number"`
-	LastChapterReadAt     *time.Time `json:"last_chapter_read_at"`
-	// IsFollowed              bool       `json:"is_followed"`
-	// Image                   string     `json:"image"`
-	// Sources                 []*Source  `json:"sources"`
-	// PublicationFollowStatus *string    `json:"status"`
-	// LastReadChapterId       *int       `json:"chapter_id"`
-	// LastReadChapterNumber *string `json:"last_read_chapter_number"`
-	// LastChapterReadAt       *time.Time `json:"last_chapter_read_at"`
-	// Chapters                []*Chapter `json:"chapters"`
+	ID          int         `json:"id"`
+	Title       string      `json:"title"`
+	Sinopsis    string      `json:"description"`
+	Finished    bool        `json:"finished"`
+	ReleaseDate pgtype.Date `json:"firstAired"`
+	Type        string      `json:"type"`
+	AuthorID    int64
+	StudioID    int64
+	CreatedAt   time.Time  `json:"created_at"`
+	UpdatedAt   time.Time  `json:"updated_at"`
+	Chapters    []*Chapter `json:"chapters"`
+	Image       string     `json:"image"`
+}
+
+type UserBookmark struct {
+	ID                      int
+	UserID                  int
+	PublicationID           int
+	LastChapterReadAt       *time.Time `json:"last_chapter_read_at"`
+	Status                  string     `json:"status"`
+	LastChapterInteractedAt *time.Time `json:"last_chapter_interacted_at"`
+	LastChapterInteractedID int        `json:"last_chapter_interacted_id"`
+}
+
+type PublicationWithBookmark struct {
+	Publication
+	Bookmark *UserBookmark
 }
 
 func (p *Publication) Validate() error {
@@ -118,13 +124,12 @@ func (p *Publication) fetchPublications(ctx context.Context, userID uint, id str
 			&publication.Sinopsis,
 			&publication.Finished,
 			&publication.ReleaseDate,
-			&publication.TypeID,
+			&publication.Type,
 			&publication.CreatedAt,
 			&publication.UpdatedAt,
-			&publication.Status,
-			&publication.LastReadChapterId,
-			&publication.LastReadChapterNumber,
-			&publication.LastChapterReadAt,
+			// &publication.Status,
+			// &publication.LastReadChapterId,
+			// &publication.LastReadChapterNumber,
 		)
 		if err != nil {
 			return nil, err
@@ -155,7 +160,14 @@ type GetAllPublicationsOptions struct {
 	Limit  int
 }
 
-func (p *Publication) GetAllPublications(ctx context.Context, opts GetAllPublicationsOptions) ([]*Publication, error) {
+func (p *Publication) GetAllPublicationWithBookmarks(ctx context.Context, opts GetAllPublicationsOptions) ([]*PublicationWithBookmark, error) {
+	var limit int
+	if opts.Limit == 0 {
+		limit = 20
+	} else {
+		limit = opts.Limit
+	}
+	fmt.Println("opts", opts)
 	query := `
 		SELECT 
 			p.id, 
@@ -163,41 +175,83 @@ func (p *Publication) GetAllPublications(ctx context.Context, opts GetAllPublica
 			p.sinopsis, 
 			p.finished,
 			p.release_date,
-			p.type_id
+			p.image_url,
+			ub.last_chapter_interacted_id,
+			ub.last_chapter_interacted_at,
+			ubs.name AS status,
+			pt.name AS type
 		FROM publications p
+		LEFT JOIN user_bookmarks ub ON p.id = ub.publication_id AND ub.user_id = 1
+		LEFT JOIN user_bookmark_status ubs ON ub.status_id = ubs.id
+		LEFT JOIN publication_types pt ON p.type_id = pt.id
 		ORDER BY p.release_date DESC
 		LIMIT $1 OFFSET $2`
 
 	var rows *sql.Rows
 	var err error
 
-	var limit int
-	if opts.Limit == 0 {
-		limit = 20
-	} else {
-		limit = opts.Limit
-	}
-
 	rows, err = db.QueryContext(ctx, query, limit, opts.Page*limit)
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
-	var publications []*Publication
+	var publications []*PublicationWithBookmark
 	for rows.Next() {
-		var publication Publication
+
+		var publication PublicationWithBookmark
+		var lastChapterInteractedID sql.NullInt64
+		var lastChapterInteractedAt sql.NullTime
+		var status sql.NullString
+
 		err := rows.Scan(
 			&publication.ID,
 			&publication.Title,
 			&publication.Sinopsis,
 			&publication.Finished,
 			&publication.ReleaseDate,
-			&publication.TypeID,
+			&publication.Image,
+			&lastChapterInteractedID,
+			&lastChapterInteractedAt,
+			&status,
+			&publication.Type,
 		)
 		if err != nil {
 			return nil, err
 		}
+		if lastChapterInteractedID.Valid {
+			publication.Bookmark.LastChapterInteractedID = int(lastChapterInteractedID.Int64)
+		}
+		if lastChapterInteractedAt.Valid {
+			publication.Bookmark.LastChapterInteractedAt = &lastChapterInteractedAt.Time
+		}
+		if status.Valid {
+			publication.Bookmark.Status = status.String
+		}
+
 		publications = append(publications, &publication)
+
+		var chapters []*Chapter
+		chapterRows, err := db.QueryContext(ctx,
+			`SELECT
+				id,
+				title,
+				number,
+				season_number
+			FROM chapters
+			WHERE publication_id = $1`, publication.ID)
+		if err != nil {
+			return nil, err
+		}
+		for chapterRows.Next() {
+			var chapter Chapter
+			err := chapterRows.Scan(&chapter.ID, &chapter.Title, &chapter.Number, &chapter.SeasonNumber)
+			if err != nil {
+				return nil, err
+			}
+			chapters = append(chapters, &chapter)
+		}
+		publication.Chapters = chapters
 	}
 	return publications, nil
 }

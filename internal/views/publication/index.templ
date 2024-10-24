@@ -13,42 +13,53 @@ import (
 const (
 	STATUS_READING = "reading"
 	STATUS_DROPPED = "dropped"
+	DEFAULT_IMAGE  = "/static/images/default-poster.jpg"
 )
 
-templ Publication(publication *services.Publication) {
+func getImage(publication *services.PublicationWithBookmark) string {
+	if publication.Image == "" {
+		return DEFAULT_IMAGE
+	}
+	return publication.Image
+}
+
+templ Publication(publication *services.PublicationWithBookmark) {
 	<div
-		class="bg-base-100 shadow-sm flex"
+		class="bg-base-100 shadow-sm flex p-0"
 		hx-swap="outerHTML"
 		id={ "publication-" + strconv.Itoa(publication.ID) }
 	>
-		<div class="w-full h-full flex-none relative ">
-			// <img class="absolute w-full h-full object-cover" src={ publication.Image } alt="Movie"/>
-		</div>
-		<div class="flex w-full justify-between mx-3 my-1 ">
-			<div class="flex flex-col">
-				<h2 class="card-title mb-1 text-lg">{ publication.Title }</h2>
-				<div class="mt-1">
-					@shared.Rating(4.4)
+		<div class="flex w-full justify-between">
+			<div class="flex">
+				<div class="flex">
+					<img class="h-full max-h-[256px] aspect-[2/3]" src={ getImage(publication) } alt="Movie"/>
 				</div>
-				<p class="text-sm text-secondary mt-2">Tracking: 2354</p>
+				<div class="flex flex-col ml-2 my-2">
+					<h2 class="card-title mb-1 text-lg">{ publication.Title }</h2>
+					// <div class="mt-1">
+					// 	@shared.Rating(4.4)
+					// </div>
+					<p class="text-sm text-secondary mt-2">Tracking: 2354</p>
+				</div>
 			</div>
-			<div class="flex flex-col card-actions gap-[1px] items-end">
+			<!-- Buttons -->
+			<div class="join join-vertical h-full">
 				<button
-					class="btn btn-primary p-0 h-6 w-6 hover:bg-accent"
+					class="btn join-item  btn-primary p-0 w-6 hover:bg-accent"
 				>
 					<span>
 						@shared.FollowIcon("h-4", "w-", "stroke-base-100")
 					</span>
 				</button>
 				<button
-					class="btn btn-primary p-0 h-6 w-6 hover:bg-accent"
+					class="btn join-item  btn-primary p-0 w-6 hover:bg-accent"
 				>
 					<span>
 						@shared.FollowIcon("h-4", "w-4", "stroke-base-100")
 					</span>
 				</button>
 				<button
-					class="btn btn-primary p-0 h-6 w-6 hover:bg-accent"
+					class="btn join-item  btn-primary p-0 w-6 hover:bg-accent"
 				>
 					@shared.FollowIcon("h-4", "w-4", "stroke-base-100")
 				</button>
@@ -56,8 +67,9 @@ templ Publication(publication *services.Publication) {
 					hx-put={ "/publication/" + strconv.Itoa(publication.ID) + "/follow" }
 					hx-trigger="click"
 					hx-target={ "#publication-" + strconv.Itoa(publication.ID) }
-					class="btn btn-primary p-0 h-6 w-6 hover:bg-accent"
+					class="btn join-item  btn-primary p-0 h-6 w-6 hover:bg-accent"
 				>
+					hola
 					// if publication.IsFollowed {
 					// 	Follow
 					// } else {
@@ -97,7 +109,7 @@ templ Publication(publication *services.Publication) {
 // 	}
 // 	return ""
 // }
-templ Buttons(p *services.Publication) {
+templ Buttons(p *services.PublicationWithBookmark) {
 	<div class="join">
 		<div class="tooltip" data-tip="Mark last chapter as seen.">
 			<form
@@ -204,7 +216,7 @@ templ Buttons(p *services.Publication) {
 	</div>
 }
 
-templ DashboardPublication(p *services.Publication) {
+templ DashboardPublication(p *services.PublicationWithBookmark) {
 	<div
 		class="bg-base-100 shadow-sm flex "
 		hx-swap="outerHTML"

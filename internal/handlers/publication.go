@@ -104,7 +104,7 @@ func GetAllPublicationsHTML(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	all, err := publication.GetAllPublications(r.Context(), services.GetAllPublicationsOptions{}) //, userID)
+	all, err := publication.GetAllPublicationWithBookmarks(r.Context(), services.GetAllPublicationsOptions{}) //, userID)
 	if err != nil {
 		utils.MessageLogs.ErrorLog.Println(err)
 		return
@@ -119,85 +119,89 @@ func GetAllPublicationsHTML(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func UpsertPublicationFollowHTML(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
-	publicationIDUint, err := utils.StringToUint(id)
-	if err != nil {
-		utils.MessageLogs.ErrorLog.Println(err)
-		return
-	}
+// func UpsertPublicationFollowHTML(w http.ResponseWriter, r *http.Request) {
+// 	id := chi.URLParam(r, "id")
+// 	publicationIDUint, err := utils.StringToUint(id)
+// 	if err != nil {
+// 		utils.MessageLogs.ErrorLog.Println(err)
+// 		return
+// 	}
 
-	status := r.FormValue("status")
+// 	status := r.FormValue("status")
 
-	chapterID := r.FormValue("chapter_id")
-	chapterIDUint, err := utils.StringToUint(chapterID)
-	if err != nil {
-		utils.MessageLogs.ErrorLog.Println(err)
-		return
-	}
+// 	chapterID := r.FormValue("chapter_id")
+// 	chapterIDUint, err := utils.StringToUint(chapterID)
+// 	if err != nil {
+// 		utils.MessageLogs.ErrorLog.Println(err)
+// 		return
+// 	}
 
-	session := r.Context().Value(auth.SessionKey).(*sessions.Session)
-	userID, ok := session.Values["userID"].(uint)
-	if !ok {
-		http.Redirect(w, r, "/auth/login", http.StatusSeeOther)
-		return
-	}
-	publicationFollow := &services.UserPublicationFollows{
-		PublicationID: publicationIDUint,
-		ChapterID:     chapterIDUint,
-		Status:        status,
-		UserID:        userID,
-	}
+// 	session := r.Context().Value(auth.SessionKey).(*sessions.Session)
+// 	userID, ok := session.Values["userID"].(uint)
+// 	if !ok {
+// 		http.Redirect(w, r, "/auth/login", http.StatusSeeOther)
+// 		return
+// 	}
+// 	publicationFollow := &services.UserPublicationFollows{
+// 		PublicationID: publicationIDUint,
+// 		ChapterID:     chapterIDUint,
+// 		Status:        status,
+// 		UserID:        userID,
+// 	}
 
-	_, err = userPublicationFollows.UpsertUserPublicationFollows(r.Context(), *publicationFollow)
-	if err != nil {
-		utils.MessageLogs.ErrorLog.Println(err)
-		return
-	}
-	p, err := publication.GetPublicationById(r.Context(), id, userID)
-	if err != nil {
-		utils.MessageLogs.ErrorLog.Println(err)
-		return
+// 	_, err = userPublicationFollows.UpsertUserPublicationFollows(r.Context(), *publicationFollow)
+// 	if err != nil {
+// 		utils.MessageLogs.ErrorLog.Println(err)
+// 		return
+// 	}
+// 	p, err := publication.GetPublicationById(r.Context(), id, userID)
+// 	if err != nil {
+// 		utils.MessageLogs.ErrorLog.Println(err)
+// 		return
 
-	}
-	component := pub.DashboardPublication(p)
-	err = component.Render(r.Context(), w)
-	if err != nil {
-		utils.MessageLogs.ErrorLog.Println(err)
-		return
-	}
-}
+// 	}
+// 	component := pub.DashboardPublication(p)
+// 	err = component.Render(r.Context(), w)
+// 	if err != nil {
+// 		utils.MessageLogs.ErrorLog.Println(err)
+// 		return
+// 	}
+// }
 
-func DeletePublicationFollowHTML(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
-	publicationIDUint, err := utils.StringToUint(id)
-	if err != nil {
-		utils.MessageLogs.ErrorLog.Println(err)
-		return
-	}
+// func DeletePublicationFollowHTML(w http.ResponseWriter, r *http.Request) {
+// 	id := chi.URLParam(r, "id")
+// 	publicationIDUint, err := utils.StringToUint(id)
+// 	if err != nil {
+// 		utils.MessageLogs.ErrorLog.Println(err)
+// 		return
+// 	}
 
-	session := r.Context().Value(auth.SessionKey).(*sessions.Session)
-	userID, ok := session.Values["userID"].(uint)
-	if !ok {
-		http.Redirect(w, r, "/auth/login", http.StatusSeeOther)
-		return
-	}
+// 	session := r.Context().Value(auth.SessionKey).(*sessions.Session)
+// 	userID, ok := session.Values["userID"].(uint)
+// 	if !ok {
+// 		http.Redirect(w, r, "/auth/login", http.StatusSeeOther)
+// 		return
+// 	}
 
-	err = userPublicationFollows.DeleteUserPublicationFollow(r.Context(), publicationIDUint, userID)
-	if err != nil {
-		utils.MessageLogs.ErrorLog.Println(err)
-		return
-	}
+// 	err = userPublicationFollows.DeleteUserPublicationFollow(r.Context(), publicationIDUint, userID)
+// 	if err != nil {
+// 		utils.MessageLogs.ErrorLog.Println(err)
+// 		return
+// 	}
 
-	component := pub.Publication(&publication)
-	err = component.Render(r.Context(), w)
-	if err != nil {
-		utils.MessageLogs.ErrorLog.Println(err)
-		return
-	}
-}
+// 	component := pub.Publication(&publication)
+// 	err = component.Render(r.Context(), w)
+// 	if err != nil {
+// 		utils.MessageLogs.ErrorLog.Println(err)
+// 		return
+// 	}
+// }
 
 func DashboardHTML(w http.ResponseWriter, r *http.Request) {
+	type componentPublication struct {
+		services.Publication
+		Bookmark *services.UserBookmark
+	}
 	session := r.Context().Value(auth.SessionKey).(*sessions.Session)
 	userID, ok := session.Values["userID"].(uint)
 	if userID == 0 || !ok {
@@ -205,7 +209,7 @@ func DashboardHTML(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	publications, err := publication.GetAllPublications(r.Context(), services.GetAllPublicationsOptions{}) //, userID)
+	publications, err := publication.GetAllPublicationWithBookmarks(r.Context(), services.GetAllPublicationsOptions{}) //, userID)
 	if err != nil {
 		fmt.Println("Error", err)
 		utils.MessageLogs.ErrorLog.Println(err)

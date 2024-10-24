@@ -100,8 +100,8 @@ func (app *Application) RegisterRoutes() http.Handler {
 		r.Get("/discover", handlers.GetAllPublicationsHTML)
 		r.Get("/dashboard", handlers.DashboardHTML)
 		r.Get("/publication/{id}", handlers.GetPublicationHTML)
-		r.Put("/publication/{id}/follow", handlers.UpsertPublicationFollowHTML)
-		r.Delete("/publication/{id}/follow", handlers.DeletePublicationFollowHTML)
+		// r.Put("/publication/{id}/follow", handlers.UpsertPublicationFollowHTML)
+		// r.Delete("/publication/{id}/follow", handlers.DeletePublicationFollowHTML)
 	})
 	// router.Get("/{id}", handlers.GetPublicationHTML)
 

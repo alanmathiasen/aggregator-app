@@ -12,9 +12,10 @@ type Chapter struct {
 	ID            int       `json:"id"`
 	PublicationID int       `json:"publication_id"`
 	Number        string    `json:"number"`
+	SeasonNumber  string    `json:"season_number"`
 	Title         string    `json:"title"`
 	Description   string    `json:"description"`
-	Rating        float64   `json:"rating"`
+	Image         string    `json:"image"`
 	CreatedAt     time.Time `json:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at"`
 }
@@ -25,7 +26,6 @@ func (c *Chapter) Validate() error {
 		validation.Field(&c.Number, validation.Match(regexp.MustCompile(`^\d+(\.\d+)?$`))), // is numeric value
 		validation.Field(&c.Title, validation.Required, validation.Length(3, 50)),
 		validation.Field(&c.Description, validation.Length(3, 300)),
-		validation.Field(&c.Rating, validation.Min(0.0), validation.Max(5.0)),
 	)
 }
 

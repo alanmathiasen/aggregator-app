@@ -8,3 +8,5 @@ tmp
 
 # ignore generated css files
 static/css/tailwind.css
+
+backup.sql
